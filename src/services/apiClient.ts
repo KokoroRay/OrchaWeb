@@ -2,6 +2,13 @@ import { getCurrentSession } from './cognitoService';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ady0805oe7.execute-api.ap-southeast-1.amazonaws.com/default';
 
+interface ApiEnvelope<T> {
+    success?: boolean;
+    data?: T;
+    error?: string;
+    message?: string;
+}
+
 export async function apiRequest<T>(
     endpoint: string,
     method: string = 'GET',
@@ -40,8 +47,17 @@ export async function apiRequest<T>(
             return {} as T;
         }
 
-        const data: T = await response.json();
-        return data;
+        const payload = await response.json();
+
+        if (payload && typeof payload === 'object' && ('success' in payload || 'data' in payload || 'error' in payload)) {
+            const envelope = payload as ApiEnvelope<T>;
+            if (envelope.success === false) {
+                throw new Error(envelope.error || envelope.message || 'API Error');
+            }
+            return (envelope.data ?? ({} as T)) as T;
+        }
+
+        return payload as T;
     } catch (error) {
         console.error(`API Request failed for ${endpoint}:`, error);
         throw error;

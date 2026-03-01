@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -67,10 +69,16 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	// GET /admin/orders
 	case method == "GET" && path == "/admin/orders":
+		if !auth.IsAdmin(request) {
+			return response.Error(403, "Admin only"), nil
+		}
 		return getAllOrders(ctx)
 
 	// PUT /admin/orders/{id}
 	case method == "PUT" && strings.HasPrefix(path, "/admin/orders/"):
+		if !auth.IsAdmin(request) {
+			return response.Error(403, "Admin only"), nil
+		}
 		id := request.PathParameters["id"]
 		return updateOrderStatus(ctx, id, request)
 
@@ -129,6 +137,14 @@ func createOrder(ctx context.Context, request events.APIGatewayProxyRequest) (ev
 		var product models.Product
 		attributevalue.UnmarshalMap(prodResult.Item, &product)
 
+		if !product.IsActive {
+			continue
+		}
+
+		if ci.Quantity > product.Stock {
+			return response.Error(400, fmt.Sprintf("Sản phẩm '%s' không đủ tồn kho", product.Name)), nil
+		}
+
 		price := product.Price
 		if product.SalePrice > 0 {
 			price = product.SalePrice
@@ -168,27 +184,60 @@ func createOrder(ctx context.Context, request events.APIGatewayProxyRequest) (ev
 	}
 	order.SetDefaults()
 
-	item, _ := attributevalue.MarshalMap(order)
-	_, err = client.PutItem(ctx, &dynamodb.PutItemInput{
-		TableName: aws.String(ordersTable),
-		Item:      item,
+	orderItemMap, _ := attributevalue.MarshalMap(order)
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	transactItems := []types.TransactWriteItem{
+		{
+			Put: &types.Put{
+				TableName:           aws.String(ordersTable),
+				Item:                orderItemMap,
+				ConditionExpression: aws.String("attribute_not_exists(orderId)"),
+			},
+		},
+	}
+
+	for _, ci := range cartItems {
+		transactItems = append(transactItems,
+			types.TransactWriteItem{
+				Update: &types.Update{
+					TableName: aws.String(productsTable),
+					Key: map[string]types.AttributeValue{
+						"productId": &types.AttributeValueMemberS{Value: ci.ProductId},
+					},
+					UpdateExpression:    aws.String("SET stock = stock - :qty, updatedAt = :updated"),
+					ConditionExpression: aws.String("attribute_exists(productId) AND isActive = :active AND stock >= :qty"),
+					ExpressionAttributeValues: map[string]types.AttributeValue{
+						":qty":     &types.AttributeValueMemberN{Value: strconv.Itoa(ci.Quantity)},
+						":active":  &types.AttributeValueMemberBOOL{Value: true},
+						":updated": &types.AttributeValueMemberS{Value: now},
+					},
+				},
+			},
+			types.TransactWriteItem{
+				Delete: &types.Delete{
+					TableName: aws.String(cartTable),
+					Key: map[string]types.AttributeValue{
+						"userId":    &types.AttributeValueMemberS{Value: claims.Sub},
+						"productId": &types.AttributeValueMemberS{Value: ci.ProductId},
+					},
+				},
+			},
+		)
+	}
+
+	_, err = client.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
+		TransactItems: transactItems,
 	})
 	if err != nil {
+		var txErr *types.TransactionCanceledException
+		if errors.As(err, &txErr) {
+			return response.Error(400, "Checkout thất bại: tồn kho thay đổi hoặc dữ liệu không hợp lệ"), nil
+		}
 		return response.Error(500, "Lỗi khi tạo đơn hàng"), nil
 	}
 
-	// 4. Clear cart
-	for _, ci := range cartItems {
-		client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
-			TableName: aws.String(cartTable),
-			Key: map[string]types.AttributeValue{
-				"userId":    &types.AttributeValueMemberS{Value: claims.Sub},
-				"productId": &types.AttributeValueMemberS{Value: ci.ProductId},
-			},
-		})
-	}
-
-	// 5. Send email notification to admin via SES
+	// 4. Send email notification to admin via SES
 	go sendOrderNotification(order)
 
 	return response.Success(201, order), nil
@@ -281,7 +330,7 @@ func getOrder(ctx context.Context, id string, request events.APIGatewayProxyRequ
 	attributevalue.UnmarshalMap(result.Item, &order)
 
 	// Only allow owner or admin to view
-	if order.UserId != claims.Sub {
+	if order.UserId != claims.Sub && !auth.IsAdmin(request) {
 		return response.Error(403, "Không có quyền xem đơn hàng này"), nil
 	}
 

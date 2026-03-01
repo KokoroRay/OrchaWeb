@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/google/uuid"
 
+	"orcha-backend/pkg/auth"
 	"orcha-backend/pkg/db"
 	"orcha-backend/pkg/models"
 	"orcha-backend/pkg/response"
@@ -51,15 +52,24 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	// POST /admin/products
 	case method == "POST" && path == "/admin/products":
+		if !auth.IsAdmin(request) {
+			return response.Error(403, "Admin only"), nil
+		}
 		return createProduct(ctx, request)
 
 	// PUT /admin/products/{id}
 	case method == "PUT" && strings.HasPrefix(path, "/admin/products/"):
+		if !auth.IsAdmin(request) {
+			return response.Error(403, "Admin only"), nil
+		}
 		id := request.PathParameters["id"]
 		return updateProduct(ctx, id, request)
 
 	// DELETE /admin/products/{id}
 	case method == "DELETE" && strings.HasPrefix(path, "/admin/products/"):
+		if !auth.IsAdmin(request) {
+			return response.Error(403, "Admin only"), nil
+		}
 		id := request.PathParameters["id"]
 		return deleteProduct(ctx, id)
 

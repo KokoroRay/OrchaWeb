@@ -10,6 +10,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -17,6 +18,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 
+	"orcha-backend/pkg/auth"
 	"orcha-backend/pkg/response"
 )
 
@@ -47,6 +49,10 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return response.Error(405, "Method not allowed"), nil
 	}
 
+	if !auth.IsAdmin(request) {
+		return response.Error(403, "Admin only"), nil
+	}
+
 	var input UploadInput
 	if err := json.Unmarshal([]byte(request.Body), &input); err != nil {
 		return response.Error(400, "Dữ liệu không hợp lệ"), nil
@@ -64,9 +70,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		input.FileName = "image.jpg"
 	}
 
-	apiKey := os.Getenv("CLOUDINARY_API_KEY")
-	apiSecret := os.Getenv("CLOUDINARY_API_SECRET")
-	cloudName := os.Getenv("CLOUDINARY_CLOUD_NAME")
+	apiKey, apiSecret, cloudName := getCloudinaryConfig()
 
 	if apiKey == "" || apiSecret == "" || cloudName == "" {
 		return response.Error(500, "Cloudinary chưa được cấu hình đầy đủ"), nil
@@ -132,7 +136,27 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	}), nil
 }
 
+func getCloudinaryConfig() (string, string, string) {
+	cloudinaryURL := strings.TrimSpace(os.Getenv("CLOUDINARY_URL"))
+	if cloudinaryURL != "" {
+		parsed, err := url.Parse(cloudinaryURL)
+		if err == nil {
+			apiKey := ""
+			apiSecret := ""
+			if parsed.User != nil {
+				apiKey = parsed.User.Username()
+				apiSecret, _ = parsed.User.Password()
+			}
 
+			cloudName := strings.Trim(parsed.Host, "/")
+			if apiKey != "" && apiSecret != "" && cloudName != "" {
+				return apiKey, apiSecret, cloudName
+			}
+		}
+	}
+
+	return os.Getenv("CLOUDINARY_API_KEY"), os.Getenv("CLOUDINARY_API_SECRET"), os.Getenv("CLOUDINARY_CLOUD_NAME")
+}
 
 func main() {
 	lambda.Start(handler)

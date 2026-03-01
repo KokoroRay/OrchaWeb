@@ -45,10 +45,16 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	// GET /admin/users
 	case method == "GET" && path == "/admin/users":
+		if !auth.IsAdmin(request) {
+			return response.Error(403, "Admin only"), nil
+		}
 		return getAllUsers(ctx)
 
 	// PUT /admin/users/{id}
 	case method == "PUT" && strings.HasPrefix(path, "/admin/users/"):
+		if !auth.IsAdmin(request) {
+			return response.Error(403, "Admin only"), nil
+		}
 		id := request.PathParameters["id"]
 		return adminUpdateUser(ctx, id, request)
 

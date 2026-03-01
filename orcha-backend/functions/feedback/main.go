@@ -46,10 +46,16 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	// GET /admin/feedback
 	case method == "GET" && path == "/admin/feedback":
+		if !auth.IsAdmin(request) {
+			return response.Error(403, "Admin only"), nil
+		}
 		return getAllFeedback(ctx)
 
 	// DELETE /admin/feedback/{id}
 	case method == "DELETE" && strings.HasPrefix(path, "/admin/feedback/"):
+		if !auth.IsAdmin(request) {
+			return response.Error(403, "Admin only"), nil
+		}
 		id := request.PathParameters["id"]
 		return deleteFeedback(ctx, id)
 
