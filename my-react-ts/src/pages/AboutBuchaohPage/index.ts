@@ -1,0 +1,1 @@
+export { AboutBuchaohPage } from './AboutBuchaohPage';

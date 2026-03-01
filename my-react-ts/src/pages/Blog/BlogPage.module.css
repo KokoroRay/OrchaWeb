@@ -1,0 +1,343 @@
+.blogPage {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 1rem 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-top: 1rem;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    color: #666;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.categoryFilter {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+}
+
+.categoryBtn {
+    padding: 0.6rem 1.2rem;
+    border: 2px solid var(--color-primary);
+    background: transparent;
+    color: var(--color-primary);
+    border-radius: 25px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.categoryBtn:hover {
+    background: var(--color-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 120, 154, 0.3);
+}
+
+.categoryBtn.active {
+    background: var(--color-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(239, 120, 154, 0.3);
+}
+
+.blogGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.blogCard {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    height: fit-content;
+}
+
+.blogCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+}
+
+.cardContent {
+    padding: 1.5rem;
+}
+
+.cardMeta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.category {
+    background: var(--color-primary);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.date {
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.cardTitle {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.cardExcerpt {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.readMore {
+    background: linear-gradient(45deg, var(--color-primary), var(--color-primary-dark));
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.readMore:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(239, 120, 154, 0.4);
+}
+
+/* Blog Post Detail */
+.backButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary);
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 2rem;
+}
+
+.backButton:hover {
+    background: var(--color-primary);
+    color: white;
+    transform: translateX(-5px);
+}
+
+.blogPost {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.postHeader {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: white;
+    padding: 2.5rem 2rem;
+    text-align: center;
+}
+
+.postTitle {
+    font-size: 2.2rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+    line-height: 1.3;
+}
+
+.postMeta {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.metaItem {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+}
+
+.postContent {
+    padding: 2.5rem 2rem;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #333;
+}
+
+.postFooter {
+    padding: 2rem;
+    border-top: 1px solid #eee;
+    background: #f8f9fa;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .blogPage {
+        padding: 0.5rem 0;
+    }
+
+    .container {
+        padding: 0 0.75rem;
+    }
+
+    .header {
+        margin-bottom: 1.5rem;
+        padding-top: 0.5rem;
+    }
+
+    .title {
+        font-size: 1.8rem;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+    }
+
+    .categoryFilter {
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        padding: 0 0.5rem;
+    }
+
+    .categoryBtn {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .blogGrid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .cardContent {
+        padding: 1.25rem;
+    }
+
+    .cardTitle {
+        font-size: 1.15rem;
+    }
+
+    .cardExcerpt {
+        font-size: 0.9rem;
+    }
+
+    .readMore {
+        padding: 0.65rem 1.25rem;
+        font-size: 0.85rem;
+    }
+
+    .postHeader {
+        padding: 2rem 1.25rem;
+    }
+
+    .postTitle {
+        font-size: 1.6rem;
+    }
+
+    .postMeta {
+        gap: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .postContent {
+        padding: 2rem 1.25rem;
+        font-size: 1rem;
+        line-height: 1.7;
+    }
+
+    .postFooter {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .backButton {
+        padding: 0.6rem 1.25rem;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 0.5rem;
+    }
+
+    .title {
+        font-size: 1.6rem;
+    }
+
+    .categoryFilter {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 0;
+    }
+
+    .categoryBtn {
+        width: 100%;
+        max-width: none;
+        flex: none;
+    }
+
+    .cardContent {
+        padding: 1rem;
+    }
+
+    .postMeta {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .postContent {
+        padding: 1.5rem 1rem;
+    }
+
+    .postFooter {
+        padding: 1rem;
+    }
+}

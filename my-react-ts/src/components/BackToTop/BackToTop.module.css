@@ -1,0 +1,213 @@
+.backToTop {
+    position: fixed;
+    bottom: clamp(1rem, 3vw, 2rem);
+    right: clamp(1rem, 3vw, 2rem);
+    width: clamp(44px, 8vw, 56px);
+    height: clamp(44px, 8vw, 56px);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(239, 120, 154, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    
+    /* Initially hidden */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px) scale(0.8);
+    pointer-events: none;
+    
+    /* Backdrop blur effect */
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    
+    /* Relative positioning for ripple effect */
+    position: relative;
+    overflow: hidden;
+    
+    /* Ensure minimum touch target size */
+    min-height: 44px;
+    min-width: 44px;
+}
+
+.backToTop.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.backToTop.scrolling {
+    transform: translateY(0) scale(1.1);
+    box-shadow: 0 6px 25px rgba(239, 120, 154, 0.4);
+}
+
+.backToTop:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 30px rgba(239, 120, 154, 0.5);
+    background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+}
+
+.backToTop:active {
+    transform: translateY(-1px) scale(0.95);
+    transition-duration: 0.1s;
+}
+
+.backToTop:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(239, 120, 154, 0.4);
+}
+
+.icon {
+    font-size: 1.2rem;
+    color: var(--color-white);
+    transition: transform 0.2s ease;
+    z-index: 2;
+    position: relative;
+}
+
+.backToTop:hover .icon {
+    transform: translateY(-2px);
+}
+
+/* Ripple effect */
+.ripple {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+}
+
+.backToTop:active .ripple {
+    opacity: 1;
+    transform: scale(1);
+    transition-duration: 0.1s;
+}
+
+/* Floating animation */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-5px) scale(1.02);
+    }
+}
+
+.backToTop.visible {
+    animation: float 3s ease-in-out infinite;
+}
+
+.backToTop:hover {
+    animation: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .backToTop {
+        bottom: 3rem;
+        right: 1rem;
+        width: 45px;
+        height: 45px;
+    }
+    
+    .icon {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .backToTop {
+        bottom: 1rem;
+        right: 1rem;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .icon {
+        font-size: 1rem;
+    }
+}
+
+/* Accessibility - Reduce motion */
+/* Tablet specific optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .backToTop {
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 52px;
+        height: 52px;
+    }
+}
+
+/* Large tablet landscape */
+@media (min-width: 1025px) and (max-width: 1200px) {
+    .backToTop {
+        bottom: 1.75rem;
+        right: 1.75rem;
+        width: 54px;
+        height: 54px;
+    }
+}
+
+@media (max-width: 768px) {
+    .backToTop {
+        bottom: clamp(0.75rem, 2vw, 1.5rem);
+        right: clamp(0.75rem, 2vw, 1.5rem);
+        width: 48px;
+        height: 48px;
+    }
+    
+    .backToTop:focus {
+        outline: 3px solid rgba(239, 120, 154, 0.5);
+        outline-offset: 2px;
+    }
+}
+
+@media (max-width: 480px) {
+    .backToTop {
+        bottom: 1rem;
+        right: 1rem;
+        width: 44px;
+        height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .backToTop {
+        transition: opacity 0.2s ease;
+        animation: none;
+    }
+    
+    .backToTop:hover {
+        transform: none;
+        animation: none;
+    }
+    
+    .icon {
+        transition: none;
+    }
+    
+    .backToTop:hover .icon {
+        transform: none;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .backToTop {
+        background: var(--color-black);
+        border: 2px solid var(--color-white);
+    }
+    
+    .icon {
+        color: var(--color-white);
+    }
+}

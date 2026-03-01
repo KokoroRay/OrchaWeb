@@ -1,0 +1,233 @@
+.desktop {
+    background-color: #ffffff;
+    min-height: 2991px;
+    min-width: 1440px;
+    position: relative;
+    width: 100%;
+}
+
+.desktop .text-wrapper {
+    color: #ef789a;
+    font-family: "Anton SC-Regular", Helvetica;
+    font-size: 27px;
+    font-weight: 400;
+    left: 555px;
+    letter-spacing: 0;
+    line-height: normal;
+    position: absolute;
+    top: 88px;
+    width: 114px;
+}
+
+.desktop .div {
+    color: #ef789a;
+    font-family: "Anton SC-Regular", Helvetica;
+    font-size: 27px;
+    font-weight: 400;
+    left: 714px;
+    letter-spacing: 0;
+    line-height: normal;
+    position: absolute;
+    top: 88px;
+    width: 128px;
+}
+
+.desktop .text-wrapper-2 {
+    color: #ef789a;
+    font-family: "Anton SC-Regular", Helvetica;
+    font-size: 27px;
+    font-weight: 400;
+    left: 887px;
+    letter-spacing: 0;
+    line-height: normal;
+    position: absolute;
+    top: 88px;
+    width: 50px;
+}
+
+.desktop .p {
+    color: #ef789a;
+    font-family: "Anton SC-Regular", Helvetica;
+    font-size: 27px;
+    font-weight: 400;
+    left: 570px;
+    letter-spacing: 0;
+    line-height: normal;
+    position: absolute;
+    top: 1598px;
+    width: 299px;
+}
+
+.desktop .text-wrapper-3 {
+    color: #ef789a;
+    font-family: "Anton SC-Regular", Helvetica;
+    font-size: 27px;
+    font-weight: 400;
+    left: 630px;
+    letter-spacing: 0;
+    line-height: normal;
+    position: absolute;
+    top: 2147px;
+}
+
+.desktop .text-wrapper-4 {
+    color: #ef789a;
+    font-family: "Anton SC-Regular", Helvetica;
+    font-size: 27px;
+    font-weight: 400;
+    left: 982px;
+    letter-spacing: 0;
+    line-height: normal;
+    position: absolute;
+    top: 88px;
+    width: 76px;
+}
+
+.desktop .text-wrapper-5 {
+    color: #000000;
+    font-family: "Cormorant-Regular", Helvetica;
+    font-size: 27px;
+    font-weight: 400;
+    left: 580px;
+    letter-spacing: 0;
+    line-height: normal;
+    position: absolute;
+    text-align: justify;
+    top: 1041px;
+    width: 713px;
+}
+
+.desktop .text-wrapper-6 {
+    color: #ef789a;
+    font-family: "Cormorant-Bold", Helvetica;
+    font-size: 36px;
+    font-weight: 700;
+    left: 583px;
+    letter-spacing: 0;
+    line-height: normal;
+    position: absolute;
+    top: 967px;
+    width: 710px;
+}
+
+.desktop .rectangle {
+    background-color: #ef789a;
+    border-radius: 12px;
+    height: 39px;
+    left: 862px;
+    position: absolute;
+    top: 1211px;
+    width: 151px;
+}
+
+.desktop .text-wrapper-7 {
+    color: #ffffff;
+    font-family: "Cormorant-Regular", Helvetica;
+    font-size: 27px;
+    font-weight: 400;
+    left: 881px;
+    letter-spacing: 0;
+    line-height: normal;
+    position: absolute;
+    text-align: justify;
+    top: 1213px;
+    width: 113px;
+}
+
+.desktop .rectangle-2 {
+    background-color: #d9d9d9;
+    border-radius: 36px;
+    height: 345px;
+    left: 138px;
+    position: absolute;
+    top: 1721px;
+    width: 240px;
+}
+
+.desktop .rectangle-3 {
+    background-color: #d9d9d9;
+    border-radius: 36px;
+    height: 385px;
+    left: 138px;
+    position: absolute;
+    top: 2250px;
+    width: 415px;
+}
+
+.desktop .rectangle-4 {
+    background-color: #d9d9d9;
+    border-radius: 36px;
+    height: 462px;
+    left: 582px;
+    position: absolute;
+    top: 2250px;
+    width: 415px;
+}
+
+.desktop .rectangle-5 {
+    background-color: #d9d9d9;
+    border-radius: 36px 0px 0px 36px;
+    height: 421px;
+    left: 1026px;
+    position: absolute;
+    top: 2250px;
+    width: 276px;
+}
+
+.desktop .rectangle-6 {
+    background-color: #d9d9d9;
+    border-radius: 36px;
+    height: 345px;
+    left: 404px;
+    position: absolute;
+    top: 1721px;
+    width: 240px;
+}
+
+.desktop .rectangle-7 {
+    background-color: #d9d9d9;
+    border-radius: 36px;
+    height: 345px;
+    left: 670px;
+    position: absolute;
+    top: 1721px;
+    width: 240px;
+}
+
+.desktop .rectangle-8 {
+    background-color: #d9d9d9;
+    border-radius: 36px;
+    height: 345px;
+    left: 936px;
+    position: absolute;
+    top: 1721px;
+    width: 240px;
+}
+
+.desktop .rectangle-9 {
+    background-color: #d9d9d9;
+    border-radius: 36px 0px 0px 36px;
+    height: 345px;
+    left: 1202px;
+    position: absolute;
+    top: 1721px;
+    width: 100px;
+}
+
+.desktop .image {
+    aspect-ratio: 0.61;
+    height: 538px;
+    left: 138px;
+    position: absolute;
+    top: 948px;
+    width: 329px;
+}
+
+.desktop .img {
+    aspect-ratio: 3.73;
+    height: 193px;
+    left: 582px;
+    position: absolute;
+    top: 1293px;
+    width: 720px;
+}

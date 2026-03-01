@@ -1,0 +1,151 @@
+.languageSwitcher {
+    position: relative;
+    display: inline-block;
+}
+
+.languageButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--color-primary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(239, 120, 154, 0.15);
+}
+
+.languageButton:hover {
+    background: var(--color-primary);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 120, 154, 0.3);
+}
+
+.flagIcon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.languageCode {
+    font-weight: 600;
+    min-width: 20px;
+}
+
+.arrow {
+    font-size: 0.75rem;
+    transition: transform 0.3s ease;
+}
+
+.arrowUp {
+    transform: rotate(180deg);
+}
+
+.dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 0.5rem;
+    background: white;
+    border: 1px solid var(--color-primary);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(239, 120, 154, 0.2);
+    overflow: hidden;
+    z-index: 1000;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.languageList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.languageOption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(239, 120, 154, 0.1);
+}
+
+.languageOption:last-child {
+    border-bottom: none;
+}
+
+.languageOption:hover {
+    background: rgba(239, 120, 154, 0.08);
+}
+
+.languageOption.active {
+    background: rgba(239, 120, 154, 0.15);
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.languageName {
+    flex: 1;
+    margin-left: 0.5rem;
+}
+
+.checkmark {
+    color: var(--color-primary);
+    font-weight: bold;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    .languageButton {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+    }
+    
+    .dropdown {
+        min-width: 120px;
+    }
+    
+    .languageOption {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .languageButton,
+    .languageOption {
+        transition: none;
+    }
+    
+    .dropdown {
+        animation: none;
+    }
+    
+    .languageButton:hover {
+        transform: none;
+    }
+}

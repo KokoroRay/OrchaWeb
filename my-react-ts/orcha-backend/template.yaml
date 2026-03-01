@@ -1,0 +1,446 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ORCHA Backend - Serverless E-commerce Platform
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 128
+    Runtime: provided.al2023
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        PRODUCTS_TABLE: !Ref ProductsTable
+        ORDERS_TABLE: !Ref OrdersTable
+        CART_TABLE: !Ref CartTable
+        FEEDBACK_TABLE: !Ref FeedbackTable
+        USERS_TABLE: !Ref UsersTable
+        ADMIN_EMAIL: !Ref AdminEmail
+        SES_REGION: !Ref AWS::Region
+        CLOUDINARY_URL: !Ref CloudinaryUrl
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+      AllowHeaders: "'Content-Type,Authorization'"
+      AllowOrigin: "'*'"
+
+Parameters:
+  AdminEmail:
+    Type: String
+    Description: Admin email for order notifications
+    Default: admin@orcha.com
+  CloudinaryUrl:
+    Type: String
+    Description: Cloudinary URL for image uploads
+    NoEcho: true
+  CognitoUserPoolId:
+    Type: String
+    Description: Cognito User Pool ID
+  CognitoUserPoolArn:
+    Type: String
+    Description: Cognito User Pool ARN
+
+Resources:
+  # ============================================================
+  # API Gateway
+  # ============================================================
+  OrchaApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !Ref CognitoUserPoolArn
+        AddDefaultAuthorizerToCorsPreflight: false
+
+  # ============================================================
+  # DynamoDB Tables
+  # ============================================================
+  ProductsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: orcha-products
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: productId
+          AttributeType: S
+        - AttributeName: category
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: productId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: CategoryIndex
+          KeySchema:
+            - AttributeName: category
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  OrdersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: orcha-orders
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: orderId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: orderId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: UserOrderIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: StatusIndex
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  CartTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: orcha-cart
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: productId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: productId
+          KeyType: RANGE
+
+  FeedbackTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: orcha-feedback
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: feedbackId
+          AttributeType: S
+        - AttributeName: productId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: feedbackId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: ProductFeedbackIndex
+          KeySchema:
+            - AttributeName: productId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: UserFeedbackIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: orcha-users
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: EmailIndex
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  # ============================================================
+  # Lambda Functions
+  # ============================================================
+
+  # --- Products Lambda ---
+  ProductsFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: functions/products/
+      Handler: bootstrap
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProductsTable
+      Events:
+        GetProducts:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /products
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetProduct:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /products/{id}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetProductsByCategory:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /products/category/{category}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        AdminCreateProduct:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /admin/products
+            Method: POST
+        AdminUpdateProduct:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /admin/products/{id}
+            Method: PUT
+        AdminDeleteProduct:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /admin/products/{id}
+            Method: DELETE
+
+  # --- Orders Lambda ---
+  OrdersFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: functions/orders/
+      Handler: bootstrap
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OrdersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CartTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProductsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: '*'
+      Events:
+        CreateOrder:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /orders
+            Method: POST
+        GetUserOrders:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /orders
+            Method: GET
+        GetOrder:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /orders/{id}
+            Method: GET
+        AdminGetAllOrders:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /admin/orders
+            Method: GET
+        AdminUpdateOrder:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /admin/orders/{id}
+            Method: PUT
+
+  # --- Cart Lambda ---
+  CartFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: functions/cart/
+      Handler: bootstrap
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CartTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProductsTable
+      Events:
+        AddToCart:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /cart
+            Method: POST
+        GetCart:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /cart
+            Method: GET
+        UpdateCart:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /cart
+            Method: PUT
+        RemoveFromCart:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /cart/{productId}
+            Method: DELETE
+
+  # --- Feedback Lambda ---
+  FeedbackFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: functions/feedback/
+      Handler: bootstrap
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FeedbackTable
+      Events:
+        GetProductFeedback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /feedback/product/{productId}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        CreateFeedback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /feedback
+            Method: POST
+        AdminGetAllFeedback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /admin/feedback
+            Method: GET
+        AdminDeleteFeedback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /admin/feedback/{id}
+            Method: DELETE
+
+  # --- Users Lambda ---
+  UsersFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: functions/users/
+      Handler: bootstrap
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        GetProfile:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /users/profile
+            Method: GET
+        UpdateProfile:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /users/profile
+            Method: PUT
+        AdminGetUsers:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /admin/users
+            Method: GET
+        AdminUpdateUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /admin/users/{id}
+            Method: PUT
+
+  # --- Upload Lambda (Cloudinary) ---
+  UploadFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: functions/upload/
+      Handler: bootstrap
+      Events:
+        UploadImage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /admin/upload-image
+            Method: POST
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${OrchaApi}.execute-api.${AWS::Region}.amazonaws.com/prod/"
+  ProductsTableName:
+    Description: Products DynamoDB table
+    Value: !Ref ProductsTable
+  OrdersTableName:
+    Description: Orders DynamoDB table
+    Value: !Ref OrdersTable

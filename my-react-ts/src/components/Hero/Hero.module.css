@@ -1,0 +1,411 @@
+.hero {
+    position: relative;
+    height: clamp(60vh, 70vh, 80vh);
+    margin-top: 88px;
+    overflow: hidden;
+    z-index: 10;
+}
+
+@media (max-width: 1200px) {
+    .hero {
+        height: 65vh;
+        margin-top: 80px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .hero {
+        height: 60vh;
+        margin-top: 75px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero {
+        height: 55vh;
+        margin-top: 70px;
+    }
+}
+
+@media (max-width: 640px) {
+    .hero {
+        height: 50vh;
+        margin-top: 65px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        height: 45vh;
+        margin-top: 60px;
+    }
+}
+
+.imageWrapper {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+}
+
+.image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.heroContent {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.textOverlay {
+    text-align: center;
+    color: var(--color-white);
+    max-width: clamp(300px, 90%, 800px);
+    padding: clamp(1rem, 3vw, 2rem);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border-radius: clamp(12px, 2vw, 20px);
+    animation: fadeInUp 1s ease-out;
+    margin: 0 1rem;
+}
+
+@media (max-width: 1024px) {
+    .textOverlay {
+        max-width: 700px;
+        padding: 1.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .textOverlay {
+        max-width: 90%;
+        padding: 1.5rem;
+        border-radius: 16px;
+    }
+}
+
+@media (max-width: 640px) {
+    .textOverlay {
+        max-width: 95%;
+        padding: 1.25rem;
+        border-radius: 12px;
+        margin: 0 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .textOverlay {
+        max-width: 100%;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 0 0.25rem;
+    }
+}
+
+.title {
+    margin: 0 0 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.brandName {
+    font-size: clamp(2rem, 6vw, 4rem);
+    font-weight: 900;
+    color: var(--color-white);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+    letter-spacing: 2px;
+    line-height: 1.1;
+    animation: fadeInUp 0.8s ease-out;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    font-weight: 600;
+    color: var(--color-white);
+    line-height: 1.3;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+    margin-bottom: 0.5rem;
+}
+
+.description {
+    font-size: clamp(0.875rem, 2vw, 1.125rem);
+    line-height: 1.6;
+    color: var(--color-white);
+    margin: 0 0 clamp(1rem, 3vw, 2rem) 0;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+    animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.features {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    animation: fadeInUp 0.8s ease-out 0.6s both;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    color: var(--color-white);
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s ease;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+.feature:hover {
+    transform: translateY(-2px);
+}
+
+.featureIcon {
+    font-size: 1.5rem;
+}
+
+.cta {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    animation: fadeInUp 0.8s ease-out 0.8s both;
+}
+
+.primaryButton {
+    background: linear-gradient(45deg, var(--color-primary), var(--color-primary-dark));
+    color: var(--color-white);
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(239, 120, 154, 0.3);
+}
+
+.primaryButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(239, 120, 154, 0.4);
+}
+
+.secondaryButton {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--color-white);
+    border: 2px solid var(--color-white);
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.secondaryButton:hover {
+    background: var(--color-white);
+    color: var(--color-primary);
+    transform: translateY(-2px);
+}
+
+.imageWrapper {
+    position: relative;
+    z-index: 10;
+    animation: fadeInLeft 1s ease-out 0.5s both;
+}
+
+.image {
+    width: 100%;
+    height: 500px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    transition: transform 0.5s ease;
+}
+
+.image:hover {
+    transform: scale(1.02);
+}
+
+.imageOverlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg, rgba(239, 120, 154, 0.1), transparent);
+    border-radius: 20px;
+    pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero {
+        height: auto;
+        aspect-ratio: 4/3; /* Tỷ lệ 4:3 cho mobile */
+        margin-top: 72px;
+    }
+
+    .image {
+        object-fit: cover; /* Ảnh phủ kín, không méo */
+        object-position: left center; /* Dịch ảnh sang bên trái */
+    }
+
+    /* Text overlay responsive */
+    .brandName {
+        font-size: clamp(1.5rem, 5vw, 1.8rem); /* Scale nhỏ hơn cho mobile */
+    }
+    
+    .subtitle {
+        font-size: clamp(0.9rem, 3vw, 1.1rem);
+    }
+    
+    .description {
+        font-size: clamp(0.8rem, 2.5vw, 0.95rem);
+    }
+
+    .textOverlay {
+        text-align: center; /* Căn giữa */
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        height: auto;
+        aspect-ratio: 4/3;
+        /* Tỷ lệ 4:3 cho mobile */
+        margin-top: 80px;
+        min-height: auto;
+        margin-bottom: 0;
+    }
+
+    .imageWrapper {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .image {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        /* Ảnh phủ kín, không méo */
+        object-position: left center; /* Dịch ảnh sang bên trái */
+    }
+}
+
+/* Additional Animations */
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInLeft {
+    0% {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Enhanced Mobile Responsive */
+@media (max-width: 768px) {
+    .hero {
+        min-height: 50vh;
+        padding: 1rem;
+    }
+    
+    .heroContent {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .textOverlay {
+        max-width: 90%;
+        padding: 1.5rem;
+        border-radius: 16px;
+        text-align: center;
+    }
+    
+    .brandName {
+        font-size: clamp(1.5rem, 5vw, 1.8rem); /* Scale nhỏ hơn cho mobile */
+    }
+    
+    .subtitle {
+        font-size: clamp(0.9rem, 3vw, 1.1rem);
+    }
+    
+    .description {
+        font-size: clamp(0.8rem, 2.5vw, 0.95rem);
+    }
+    
+    .features {
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .feature {
+        font-size: 0.875rem;
+    }
+    
+    .cta {
+        justify-content: center;
+    }
+    
+    .primaryButton,
+    .secondaryButton {
+        padding: 0.875rem 1.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .image {
+        height: 300px;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .brandName,
+    .subtitle,
+    .description,
+    .features,
+    .cta,
+    .imageWrapper,
+    .feature,
+    .image {
+        animation: none !important;
+    }
+    
+    .feature:hover,
+    .primaryButton:hover,
+    .secondaryButton:hover,
+    .image:hover {
+        transform: none;
+    }
+}

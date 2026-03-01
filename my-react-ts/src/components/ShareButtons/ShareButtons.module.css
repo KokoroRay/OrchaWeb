@@ -1,0 +1,202 @@
+.shareContainer {
+    position: relative;
+    display: inline-block;
+    z-index: 100;
+}
+
+.shareToggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(239, 120, 154, 0.3);
+}
+
+.shareToggle:hover {
+    background: var(--color-primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 120, 154, 0.4);
+}
+
+.shareButtons {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 0.75rem;
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 180px;
+    z-index: 1001;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.shareBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-gray-700);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.shareBtn:hover {
+    background: var(--color-gray-100);
+    transform: translateX(4px);
+}
+
+.shareBtn svg {
+    font-size: 1.125rem;
+    flex-shrink: 0;
+}
+
+/* Platform specific colors */
+.facebook:hover {
+    background: rgba(24, 119, 242, 0.1);
+    color: #1877F2;
+}
+
+.facebook svg {
+    color: #1877F2;
+}
+
+.twitter:hover {
+    background: rgba(29, 161, 242, 0.1);
+    color: #1DA1F2;
+}
+
+.twitter svg {
+    color: #1DA1F2;
+}
+
+.linkedin:hover {
+    background: rgba(0, 119, 181, 0.1);
+    color: #0077B5;
+}
+
+.linkedin svg {
+    color: #0077B5;
+}
+
+.copy:hover {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22C55E;
+}
+
+.copy svg {
+    color: var(--color-gray-600);
+}
+
+.copy.copied {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22C55E;
+}
+
+.copy.copied svg {
+    color: #22C55E;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .shareButtons {
+        position: fixed;
+        top: auto;
+        bottom: 1rem;
+        left: 1rem;
+        right: 1rem;
+        transform: none;
+        margin-top: 0;
+        flex-direction: row;
+        justify-content: space-around;
+        min-width: auto;
+        padding: 1.5rem 1rem;
+        animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .shareBtn {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        flex: 1;
+        text-align: center;
+        min-height: 64px;
+    }
+
+    .shareBtn span {
+        font-size: 0.75rem;
+    }
+
+    .shareBtn:hover {
+        transform: translateY(-2px);
+    }
+}
+
+@media (max-width: 480px) {
+    .shareToggle {
+        padding: 0.625rem 0.875rem;
+        font-size: 0.8rem;
+    }
+
+    .shareBtn span {
+        display: none;
+    }
+
+    .shareButtons {
+        padding: 1rem 0.5rem;
+    }
+}

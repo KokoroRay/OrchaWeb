@@ -1,0 +1,1084 @@
+/* PROFESSIONAL PRODUCT DETAIL PAGE - Clean Health Brand Design */
+
+/* Color Palette - Synced with global theme */
+:root {
+  --primary: #ef789a;        /* Pink - main accent (matching global) */
+  --primary-light: #f49ab5;  /* Light pink */
+  --primary-dark: #e35679;   /* Dark pink */
+  --bg-light: #f9fafb;       /* Very light gray */
+  --text-dark: #1f2937;      /* Dark gray - main text */
+  --text-muted: #6b7280;     /* Muted gray - secondary text */
+  --border: #e5e7eb;         /* Light border */
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Global */
+.container {
+  min-height: 100vh;
+  background: white;
+  padding: 2rem 1rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+  color: var(--text-dark);
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1.5rem 1rem;
+  }
+}
+
+/* Back Button */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  margin-bottom: 2rem;
+}
+
+.backButton:hover {
+  background: white;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ========== 1. PRODUCT OVERVIEW - E-commerce Layout ========== */
+.productOverview {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 2rem;
+  padding: 1.2rem 0;
+  margin-bottom: 2rem;
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Image Gallery - Left Side */
+.productGallery {
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+}
+
+.mainImage {
+  background: linear-gradient(135deg, #fef0f5 0%, #fce7f0 100%);
+  border-radius: 12px;
+  padding: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 550px;
+  border: 2px solid #fce7f0;
+  position: relative;
+  overflow: hidden;
+}
+
+.mainImage::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(239, 120, 154, 0.08) 0%, transparent 70%);
+  animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.productIcon {
+  font-size: 6.5rem;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Product Info - Right Side */
+.productInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.productTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-dark);
+  line-height: 1.2;
+}
+
+.productSummary {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.priceSection {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  padding: 1rem 0;
+  border-top: 2px solid var(--border);
+  border-bottom: 2px solid var(--border);
+}
+
+.price {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.priceLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+/* CTA Buttons */
+.ctaButtons {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}
+
+.ctaPrimary,
+.ctaSecondary {
+  flex: 1;
+  padding: 0.9rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  text-decoration: none;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ctaPrimary {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.ctaPrimary:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 120, 154, 0.3);
+}
+
+.ctaSecondary {
+  background: white;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.ctaSecondary:hover {
+  background: #fef0f5;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .productOverview {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1rem 0;
+  }
+
+  .productGallery {
+    position: static;
+  }
+
+  .mainImage {
+    min-height: 220px;
+    padding: 1.5rem;
+  }
+
+  .productIcon {
+    font-size: 6rem;
+  }
+
+  .productInfo {
+    gap: 0.9rem;
+  }
+
+  .productTitle {
+    font-size: 1.3rem;
+  }
+
+  .productSummary {
+    font-size: 0.85rem;
+  }
+
+  .price {
+    font-size: 1.5rem;
+  }
+
+  .priceSection {
+    padding: 0.9rem 0;
+  }
+
+  .productMeta {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .metaItem {
+    padding: 0.7rem 0.6rem;
+  }
+
+  .metaIcon {
+    font-size: 1.2rem;
+  }
+
+  .metaLabel {
+    font-size: 0.65rem;
+  }
+
+  .metaValue {
+    font-size: 0.82rem;
+  }
+
+  .ctaButtons {
+    flex-direction: row;
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+  }
+
+  .ctaPrimary,
+  .ctaSecondary {
+    padding: 0.8rem 1.2rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Product Meta Information - Grid Layout (Expandable) */
+.productMeta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.metaItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.8rem 0.7rem;
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.metaItem:hover {
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 2px 8px rgba(239, 120, 154, 0.1);
+}
+
+.metaIcon {
+  font-size: 1.4rem;
+  line-height: 1;
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.metaContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.metaLabel {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metaValue {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.3;
+  word-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 1.6rem;
+  }
+  .heroBenefit {
+    font-size: 1rem;
+  }
+
+  .benefitsSection {
+    margin: 2.5rem 0;
+  }
+
+  .sectionTitle {
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .benefitsShowcase {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+
+  .benefitShowcaseCard {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .benefitNumber {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+
+  .benefitShowcaseCard h3 {
+    font-size: 1.1rem;
+    margin: 1rem 0 0.6rem;
+  }
+
+  .benefitShowcaseCard p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+}
+
+/* ========== 2. KEY BENEFITS SECTION ========== */
+.benefitsSection {
+  margin: 4rem 0;
+}
+
+.sectionTitle {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 2rem 0;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.benefitsShowcase {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.benefitShowcaseCard {
+  padding: 2rem 1.5rem;
+  background: linear-gradient(135deg, #fef0f5 0%, #fce7f0 100%);
+  border-radius: 12px;
+  border: 2px solid #fce7f0;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.benefitShowcaseCard:hover {
+  box-shadow: 0 8px 20px rgba(239, 120, 154, 0.2);
+  border-color: var(--primary);
+  transform: translateY(-4px);
+}
+
+.benefitNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.benefitShowcaseCard h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+  color: var(--primary);
+}
+
+.benefitShowcaseCard p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ========== 3. INFO SECTION (TABS) ========== */
+.infoSection {
+  margin: 4rem 0;
+}
+
+.tabBar {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+  overflow-x: auto;
+}
+
+.tabButton {
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tabButton:hover {
+  color: var(--primary);
+}
+
+.tabButton.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.tabContent {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.tabPane {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Nutrition & Ingredients */
+.nutritionAndIngredients {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+}
+
+.ingredientsColumn h3,
+.nutritionColumn h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+  color: var(--primary);
+}
+
+.ingredientsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ingredientsList li {
+  padding: 0.8rem;
+  padding-left: 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.ingredientsList li:last-child {
+  border-bottom: none;
+}
+
+.ingredientsList li::before {
+  content: '✓ ';
+  color: var(--primary);
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.nutritionGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2rem;
+}
+
+.nutritionItem {
+  padding: 1rem;
+  background: var(--bg-light);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary);
+}
+
+.nutritionLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nutritionValue {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 0.3rem 0;
+}
+
+.nutritionNote {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+/* Usage Content */
+.usageContent h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: var(--primary);
+}
+
+.usageText {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+  margin: 0 0 2rem 0;
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 8px;
+}
+
+.tipsSection h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem 0;
+  color: var(--primary);
+}
+
+.tipsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tipsList li {
+  padding: 0.8rem 0;
+  padding-left: 2rem;
+  position: relative;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.tipsList li::before {
+  content: '→ ';
+  position: absolute;
+  left: 0;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* FAQ Content */
+.faqContent {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.faqItem {
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary);
+}
+
+.faqItem h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.8rem 0;
+  color: var(--primary);
+}
+
+.faqItem p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .nutritionAndIngredients {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .tabBar {
+    flex-wrap: wrap;
+  }
+}
+
+/* ========== 4. EDUCATION SECTION ========== */
+.educationSection {
+  margin: 4rem 0;
+}
+
+.educationCard {
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.educationCard:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow);
+}
+
+.educationCardHeader {
+  width: 100%;
+  padding: 1.5rem;
+  background: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  transition: all 0.2s ease;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.educationCardHeader:hover {
+  background: #fef0f5;
+}
+
+.chevron {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+}
+
+.educationCardBody {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  background: white;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  animation: slideDown 0.3s ease-out;
+}
+
+.educationCardBody p {
+  margin: 0 0 1rem 0;
+}
+
+.educationCardBody p:last-child {
+  margin-bottom: 0;
+}
+
+.educationCardBody strong {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.reasonList {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0 0;
+}
+
+.reasonList li {
+  padding: 0.8rem 0;
+  padding-left: 2rem;
+  position: relative;
+}
+
+.reasonList li::before {
+  content: '◆ ';
+  position: absolute;
+  left: 0;
+  color: var(--primary);
+  font-size: 0.8rem;
+}
+
+.educationCardBody ul {
+  margin: 1rem 0 0 2rem;
+  padding: 0;
+}
+
+.educationCardBody ul li {
+  margin: 0.5rem 0;
+  color: var(--text-muted);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+    transform: translateY(0);
+  }
+}
+
+/* ========== 5. REFERENCES SECTION ========== */
+.referencesSection {
+  margin: 4rem 0;
+  padding: 3rem 2rem;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+}
+
+.referencesIntro {
+  text-align: center;
+  color: var(--text-muted);
+  margin: 0 0 2rem 0;
+  font-size: 1rem;
+}
+
+.referencesList {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.referenceItem {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.referenceItem:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgba(239, 120, 154, 0.15);
+  transform: translateY(-2px);
+  background: white;
+}
+
+.referenceNumber {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.referenceContent {
+  flex: 1;
+}
+
+.referenceTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 0 0 0.5rem 0;
+}
+
+.referenceDesc {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0 0 0.8rem 0;
+  line-height: 1.6;
+}
+
+.referenceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  color: var(--primary);
+  font-weight: 600;
+  transition: gap 0.3s ease;
+}
+
+.referenceItem:hover .referenceLink {
+  gap: 0.6rem;
+}
+
+/* ========== 6. DISCLAIMER SECTION ========== */
+.disclaimerSection {
+  margin: 4rem 0;
+  padding: 2rem;
+  background: #fff5f5;
+  border-left: 4px solid #f87171;
+  border-radius: 8px;
+}
+
+.disclaimerText {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #7f1d1d;
+  line-height: 1.7;
+}
+
+/* ========== CALL TO ACTION ========== */
+.ctaSection {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: linear-gradient(135deg, #fef0f5 0%, #fce7f0 100%);
+  border-radius: 12px;
+  margin: 4rem 0;
+}
+
+.ctaSection h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: var(--primary);
+}
+
+.ctaSection p {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin: 0 0 1.5rem 0;
+}
+
+.ctaButton {
+  padding: 1rem 2rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-lg);
+}
+
+.ctaButton:hover {
+  background: #047857;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.2);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .container {
+    padding: 1.5rem 1rem;
+  }
+
+  .backButton {
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.4rem;
+  }
+
+  .productMeta {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+
+  .metaItem {
+    padding: 1rem;
+  }
+
+  .benefitsShowcase {
+    grid-template-columns: 1fr;
+  }
+
+  .infoSection {
+    margin: 2.5rem 0;
+  }
+
+  .tabBar {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tabButton {
+    padding: 0.8rem 1rem;
+    font-size: 0.85rem;
+    flex: 1;
+    min-width: calc(50% - 0.25rem);
+  }
+
+  .tabButton:last-child {
+    flex: 1 1 100%;
+  }
+
+  .nutritionGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .nutritionItem {
+    padding: 1rem;
+  }
+
+  .nutritionLabel {
+    font-size: 0.75rem;
+  }
+
+  .nutritionValue {
+    font-size: 1rem;
+  }
+
+  .usageText {
+    padding: 1.2rem;
+    font-size: 0.95rem;
+  }
+
+  .faqItem {
+    padding: 1.2rem;
+  }
+
+  .faqItem h4 {
+    font-size: 0.95rem;
+  }
+
+  .faqItem p {
+    font-size: 0.9rem;
+  }
+
+  .educationSection {
+    margin: 2.5rem 0;
+  }
+
+  .educationCardHeader {
+    padding: 1.2rem;
+    font-size: 0.95rem;
+  }
+
+  .educationCardBody {
+    padding: 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .educationCardBody ul {
+    padding-left: 1.2rem;
+  }
+
+  .referencesSection {
+    margin: 2.5rem 0;
+  }
+
+  .referencesIntro {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .referenceItem {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.2rem;
+  }
+
+  .referenceNumber {
+    align-self: flex-start;
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+
+  .referenceTitle {
+    font-size: 1rem;
+  }
+
+  .referenceDesc {
+    font-size: 0.85rem;
+  }
+
+  .referenceLink {
+    font-size: 0.85rem;
+  }
+
+  .disclaimerSection {
+    margin: 2.5rem 0;
+    padding: 1.5rem;
+  }
+
+  .disclaimerText {
+    font-size: 0.85rem;
+  }
+
+  .ctaSection {
+    padding: 2rem 1.5rem;
+    margin: 2.5rem 0;
+  }
+
+  .ctaSection h2 {
+    font-size: 1.3rem;
+  }
+
+  .ctaSection p {
+    font-size: 0.9rem;
+  }
+
+  .ctaButton {
+    padding: 0.85rem 1.5rem;
+    font-size: 0.9rem;
+  }
+}
