@@ -69,7 +69,9 @@ jobs:
             --resolve-s3 \
             --parameter-overrides \
               AdminEmail=${{ secrets.ADMIN_EMAIL }} \
-              CloudinaryUrl=${{ secrets.CLOUDINARY_URL }} \
+              CloudinaryApiKey=${{ secrets.CLOUDINARY_API_KEY }} \
+              CloudinaryApiSecret=${{ secrets.CLOUDINARY_API_SECRET }} \
+              CloudinaryCloudName=${{ secrets.CLOUDINARY_CLOUD_NAME }} \
               CognitoUserPoolId=${{ secrets.COGNITO_USER_POOL_ID }} \
               CognitoUserPoolArn=${{ secrets.COGNITO_USER_POOL_ARN }}
 

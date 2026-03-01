@@ -64,11 +64,12 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		input.FileName = "image.jpg"
 	}
 
-	// Parse Cloudinary URL
-	cloudinaryUrl := os.Getenv("CLOUDINARY_URL")
-	apiKey, apiSecret, cloudName, err := parseCloudinaryUrl(cloudinaryUrl)
-	if err != nil {
-		return response.Error(500, "Cloudinary chưa được cấu hình đúng"), nil
+	apiKey := os.Getenv("CLOUDINARY_API_KEY")
+	apiSecret := os.Getenv("CLOUDINARY_API_SECRET")
+	cloudName := os.Getenv("CLOUDINARY_CLOUD_NAME")
+
+	if apiKey == "" || apiSecret == "" || cloudName == "" {
+		return response.Error(500, "Cloudinary chưa được cấu hình đầy đủ"), nil
 	}
 
 	// Decode base64 image
@@ -131,24 +132,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	}), nil
 }
 
-func parseCloudinaryUrl(url string) (apiKey, apiSecret, cloudName string, err error) {
-	// Format: cloudinary://API_KEY:API_SECRET@CLOUD_NAME
-	url = strings.TrimPrefix(url, "cloudinary://")
-	parts := strings.SplitN(url, "@", 2)
-	if len(parts) != 2 {
-		return "", "", "", fmt.Errorf("invalid cloudinary URL format")
-	}
-	cloudName = parts[1]
 
-	creds := strings.SplitN(parts[0], ":", 2)
-	if len(creds) != 2 {
-		return "", "", "", fmt.Errorf("invalid cloudinary credentials")
-	}
-	apiKey = creds[0]
-	apiSecret = creds[1]
-
-	return apiKey, apiSecret, cloudName, nil
-}
 
 func main() {
 	lambda.Start(handler)

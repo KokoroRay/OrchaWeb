@@ -18,7 +18,9 @@ Globals:
         USERS_TABLE: !Ref UsersTable
         ADMIN_EMAIL: !Ref AdminEmail
         SES_REGION: !Ref AWS::Region
-        CLOUDINARY_URL: !Ref CloudinaryUrl
+        CLOUDINARY_API_KEY: !Ref CloudinaryApiKey
+        CLOUDINARY_API_SECRET: !Ref CloudinaryApiSecret
+        CLOUDINARY_CLOUD_NAME: !Ref CloudinaryCloudName
   Api:
     Cors:
       AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
@@ -30,10 +32,17 @@ Parameters:
     Type: String
     Description: Admin email for order notifications
     Default: admin@orcha.com
-  CloudinaryUrl:
+  CloudinaryApiKey:
     Type: String
-    Description: Cloudinary URL for image uploads
+    Description: Cloudinary API Key
     NoEcho: true
+  CloudinaryApiSecret:
+    Type: String
+    Description: Cloudinary API Secret
+    NoEcho: true
+  CloudinaryCloudName:
+    Type: String
+    Description: Cloudinary Cloud Name
   CognitoUserPoolId:
     Type: String
     Description: Cognito User Pool ID
