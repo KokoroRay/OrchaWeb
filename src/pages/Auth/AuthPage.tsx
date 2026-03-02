@@ -50,6 +50,7 @@ export const AuthPage = () => {
     const {
         isAuthenticated,
         isLoading,
+        isAdmin,
         user,
         login,
         register,
@@ -315,6 +316,12 @@ export const AuthPage = () => {
                                     <FiHome size={18} />
                                     <span>Về trang chủ</span>
                                 </Link>
+                                {isAdmin && (
+                                    <Link to="/admin" className={styles.profileBtnPrimary}>
+                                        <FiHome size={18} />
+                                        <span>Vào trang Admin</span>
+                                    </Link>
+                                )}
                                 <button onClick={logout} className={styles.profileBtnOutline}>
                                     <FiLogOut size={18} />
                                     <span>Đăng xuất</span>
