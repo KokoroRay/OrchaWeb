@@ -1,12 +1,13 @@
 import { HashRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { MainLayout } from './layouts';
 import { Hero, AboutSection, ProductGallery, BlogSection, LoadingSpinner, NotFound, ChatBox } from './components';
-import { ContactPage, FAQPage, BlogPage, AboutBuchaohPage, ProductListPage, ProductDetailPage, AuthPage } from './pages';
+import { ContactPage, FAQPage, BlogPage, AboutBuchaohPage, ProductListPage, ProductDetailPage, AuthPage, CartPage, CheckoutPage, OrdersPage } from './pages';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { AdminPage } from './pages/Admin/AdminPage';
+import { AdminDashboard } from './pages/Admin/AdminDashboard';
+import { OrderDetailPage } from './pages/Orders/OrderDetailPage';
 
 // Import images from assets
 import logoImage from './assets/logos/Logo.png';
@@ -65,7 +66,7 @@ const AdminRoute = () => {
     return <Navigate to="/" replace />;
   }
 
-  return <AdminPage />;
+  return <AdminDashboard />;
 };
 
 function App() {
@@ -104,6 +105,10 @@ function App() {
               <Route path="/admin" element={<AdminRoute />} />
               <Route path="/products/:category" element={<ProductListPage />} />
               <Route path="/products/:category/:productId" element={<ProductDetailPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/orders/:orderId" element={<OrderDetailPage />} />
               <Route path="/about" element={<AboutBuchaohPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/faq" element={<FAQPage />} />

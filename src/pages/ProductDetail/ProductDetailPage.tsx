@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuthContext } from '../../contexts/AuthContext';
+import { cartService } from '../../services/cartService';
 import styles from './ProductDetailPage.module.css';
 import { 
   FaArrowLeft,
@@ -710,7 +712,11 @@ export const ProductDetailPage = () => {
   const { category, productId } = useParams<{ category: string; productId: string }>();
   const navigate = useNavigate();
   const { language } = useLanguage();
+  const { isAuthenticated } = useAuthContext();
   const [activeTab, setActiveTab] = useState<'nutrition' | 'usage' | 'faq'>('nutrition');
+  const [quantity, setQuantity] = useState(1);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [cartMessage, setCartMessage] = useState('');
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     definition: false,
     whyChosen: false,
@@ -726,6 +732,39 @@ export const ProductDetailPage = () => {
       ...prev,
       [section]: !prev[section]
     }));
+  };
+
+  const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      navigate('/auth');
+      return;
+    }
+
+    if (!productId) return;
+
+    setAddingToCart(true);
+    try {
+      await cartService.addItem({
+        productId,
+        quantity,
+      });
+      setCartMessage(isVi ? '✓ Đã thêm vào giỏ hàng' : '✓ Added to cart');
+      setQuantity(1);
+      setTimeout(() => setCartMessage(''), 3000);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : (isVi ? 'Lỗi khi thêm vào giỏ hàng' : 'Error adding to cart');
+      setCartMessage(`✗ ${message}`);
+      setTimeout(() => setCartMessage(''), 3000);
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  const handleQuantityChange = (delta: number) => {
+    const newQty = quantity + delta;
+    if (newQty >= 1) {
+      setQuantity(newQty);
+    }
   };
 
   useEffect(() => {
@@ -796,20 +835,58 @@ export const ProductDetailPage = () => {
           </div>
 
           <div className={styles.ctaButtons}>
-            <a 
-              href={product.shopeeUrl || 'https://shopee.vn/bucheoh'} 
-              target="_blank" 
-              rel="noopener noreferrer"
+            <div className={styles.quantitySection}>
+              <label>{isVi ? 'Số lượng:' : 'Quantity:'}</label>
+              <div className={styles.quantityControl}>
+                <button 
+                  onClick={() => handleQuantityChange(-1)}
+                  disabled={quantity <= 1}
+                >
+                  −
+                </button>
+                <input 
+                  type="number" 
+                  value={quantity} 
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (val >= 1) setQuantity(val);
+                  }}
+                  min="1"
+                />
+                <button onClick={() => handleQuantityChange(1)}>
+                  +
+                </button>
+              </div>
+            </div>
+
+            <button 
               className={styles.ctaPrimary}
+              onClick={handleAddToCart}
+              disabled={addingToCart}
             >
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style={{ marginRight: '6px' }}>
-                <path d="M19.8 4.5H4.2C2.4 4.5 1 5.9 1 7.7v8.6c0 1.8 1.4 3.2 3.2 3.2h15.6c1.8 0 3.2-1.4 3.2-3.2V7.7c0-1.8-1.4-3.2-3.2-3.2zM8.5 15.5c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm7 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
-              </svg>
-              {isVi ? 'Mua ngay' : 'Buy Now'}
-            </a>
-            <button className={styles.ctaSecondary} onClick={() => navigate('/contact')}>
+              🛒 {addingToCart ? (isVi ? 'Đang thêm...' : 'Adding...') : (isVi ? 'Thêm vào giỏ' : 'Add to Cart')}
+            </button>
+
+            <button
+              className={styles.ctaSecondary}
+              onClick={() => {
+                handleAddToCart();
+                setTimeout(() => navigate('/checkout'), 500);
+              }}
+              disabled={addingToCart}
+            >
+              🛍️ {isVi ? 'Mua ngay' : 'Buy Now'}
+            </button>
+
+            <button className={styles.ctaTertiary} onClick={() => navigate('/contact')}>
               📞 {isVi ? 'Liên hệ' : 'Contact'}
             </button>
+
+            {cartMessage && (
+              <div className={styles.cartMessage} style={{color: cartMessage.startsWith('✓') ? '#4caf50' : '#f44336'}}>
+                {cartMessage}
+              </div>
+            )}
           </div>
         </div>
       </section>

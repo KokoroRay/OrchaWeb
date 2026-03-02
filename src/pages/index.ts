@@ -7,3 +7,6 @@ export { AboutBuchaohPage } from './AboutBuchaohPage';
 export { ProductListPage } from './ProductList';
 export { ProductDetailPage } from './ProductDetail';
 export { AuthPage } from './Auth';
+export { CartPage } from './Cart';
+export { CheckoutPage } from './Checkout';
+export { OrdersPage } from './Orders';
