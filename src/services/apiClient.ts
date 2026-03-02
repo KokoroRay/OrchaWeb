@@ -1,6 +1,11 @@
 import { getCurrentSession } from './cognitoService';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ady0805oe7.execute-api.ap-southeast-1.amazonaws.com/prod';
+const LEGACY_API_BASE_URL = 'https://ady0805oe7.execute-api.ap-southeast-1.amazonaws.com/prod';
+const CURRENT_API_BASE_URL = 'https://agmdqgycme.execute-api.ap-southeast-1.amazonaws.com/prod';
+const configuredApiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
+const API_BASE_URL = !configuredApiBaseUrl || configuredApiBaseUrl === LEGACY_API_BASE_URL
+    ? CURRENT_API_BASE_URL
+    : configuredApiBaseUrl;
 
 interface ApiEnvelope<T> {
     success?: boolean;

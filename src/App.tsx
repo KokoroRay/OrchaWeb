@@ -98,11 +98,11 @@ function App() {
           <Routes>
             {/* Auth page - standalone, no MainLayout */}
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/admin" element={<AdminRoute />} />
 
             {/* Main app routes with layout */}
             <Route element={<LayoutWrapper logoSrc={logoImage} />}>
               <Route path="/" element={<HomePage />} />
-              <Route path="/admin" element={<AdminRoute />} />
               <Route path="/products/:category" element={<ProductListPage />} />
               <Route path="/products/:category/:productId" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />
