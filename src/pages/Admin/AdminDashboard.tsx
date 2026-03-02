@@ -3,14 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { 
     FiHome, FiPackage, FiShoppingCart, FiUsers, FiMessageSquare, 
     FiLogOut, FiMenu, FiX, FiEdit2, FiTrash2, FiSave, 
-    FiRefreshCw, FiImage, FiUpload, FiAlertCircle, FiCheckCircle, FiCopy, FiTag 
+    FiRefreshCw, FiImage, FiUpload, FiAlertCircle, FiCheckCircle, FiTag 
 } from 'react-icons/fi';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { orderService, type Order } from '../../services/orderService';
 import { adminService, type AdminCategory, type AdminCategoryInput, type AdminFeedback, type AdminProduct, type AdminProductInput, type AdminUser, type AdminUserRole } from '../../services/adminService';
 import { uploadImage, type UploadProgress } from '../../services/imageService';
-import { productDetailsBackup } from '../../data/productDetailsBackup';
 import logoImage from '../../assets/logos/Logo.png';
 import styles from './AdminDashboard.module.css';
 
@@ -22,7 +21,6 @@ const ORDER_STATUSES: OrderStatus[] = ['PENDING', 'CONFIRMED', 'SHIPPING', 'DELI
 interface ProductFormData {
     name: string;
     description: string;
-    detailJson: string;
     detailSummary: string;
     detailBenefits: string;
     detailIngredients: string;
@@ -40,7 +38,6 @@ interface ProductFormData {
 const initialProductForm: ProductFormData = {
     name: '',
     description: '',
-    detailJson: '',
     detailSummary: '',
     detailBenefits: '',
     detailIngredients: '',
@@ -69,125 +66,7 @@ const initialCategoryForm: CategoryFormData = {
     description: '',
 };
 
-const buildDetailJsonTemplate = (id: string, name: string, description: string, category: string) => {
-    const existing = productDetailsBackup[id];
-    if (existing) {
-        return JSON.stringify(existing, null, 2);
-    }
-
-    const isFertilizer = category.toLowerCase().includes('phan') || id.startsWith('phan-');
-    return JSON.stringify(
-        {
-            id,
-            name,
-            nameEn: name,
-            icon: isFertilizer ? '🌱' : '🥤',
-            price: '0đ',
-            summary: description || name,
-            summaryEn: description || name,
-            definition: '',
-            definitionEn: '',
-            whyChosen: '',
-            whyChosenEn: '',
-            productionModel: '',
-            productionModelEn: '',
-            businessModel: '',
-            businessModelEn: '',
-            circularInput: '',
-            circularInputEn: '',
-            circularOutput: [],
-            circularOutputEn: [],
-            processDescription: '',
-            processDescriptionEn: '',
-            educationalContent: '',
-            educationalContentEn: '',
-            healthBenefits: [],
-            nutritionFacts: [],
-            fermentationExplanation: '',
-            fermentationExplanationEn: '',
-            ingredients: [],
-            ingredientsEn: [],
-            usage: '',
-            usageEn: '',
-            faqItems: [],
-            blogReferences: [],
-            disclaimer: '⚠️ Thực phẩm bảo vệ sức khỏe, không phải thuốc.',
-            disclaimerEn: '⚠️ Functional food, not medicine.',
-            tips: [],
-            tipsEn: [],
-        },
-        null,
-        2
-    );
-};
-
-const slugify = (value: string) =>
-    value
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-
-const splitByLine = (value: string) =>
-    value
-        .split('\n')
-        .map((item) => item.trim())
-        .filter(Boolean);
-
-const buildGuidedDetailJson = (form: ProductFormData) => {
-    const fallbackId = slugify(form.name) || 'san-pham-moi';
-    const isFertilizer = form.category.toLowerCase().includes('phan') || fallbackId.startsWith('phan-');
-
-    return JSON.stringify(
-        {
-            id: fallbackId,
-            name: form.name || 'Sản phẩm mới',
-            nameEn: form.name || 'New Product',
-            icon: isFertilizer ? '🌱' : '🥤',
-            price: form.price ? formatCurrency(Number(form.price)) : '0đ',
-            summary: form.detailSummary || form.description || form.name,
-            summaryEn: form.detailSummary || form.description || form.name,
-            definition: form.description || '',
-            definitionEn: form.description || '',
-            whyChosen: '',
-            whyChosenEn: '',
-            productionModel: '',
-            productionModelEn: '',
-            businessModel: '',
-            businessModelEn: '',
-            circularInput: '',
-            circularInputEn: '',
-            circularOutput: [],
-            circularOutputEn: [],
-            processDescription: '',
-            processDescriptionEn: '',
-            educationalContent: '',
-            educationalContentEn: '',
-            healthBenefits: splitByLine(form.detailBenefits),
-            nutritionFacts: [],
-            fermentationExplanation: '',
-            fermentationExplanationEn: '',
-            ingredients: splitByLine(form.detailIngredients),
-            ingredientsEn: splitByLine(form.detailIngredients),
-            usage: form.detailUsage,
-            usageEn: form.detailUsage,
-            faqItems: splitByLine(form.detailFaq).map((line) => ({
-                question: line,
-                answer: '',
-                questionEn: line,
-                answerEn: '',
-            })),
-            blogReferences: [],
-            disclaimer: '⚠️ Thực phẩm bảo vệ sức khỏe, không phải thuốc.',
-            disclaimerEn: '⚠️ Functional food, not medicine.',
-            tips: splitByLine(form.detailUsage),
-            tipsEn: splitByLine(form.detailUsage),
-        },
-        null,
-        2
-    );
-};
+// Product detail templates are now managed manually in src/data/productDetailsBackup.txt
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -368,24 +247,6 @@ export const AdminDashboard = () => {
         await uploadProductImage(file);
     };
 
-    const handleGenerateDetailTemplate = () => {
-        setProductForm((prev) => ({
-            ...prev,
-            detailJson: buildGuidedDetailJson(prev),
-        }));
-        setSuccess('Đã tạo mẫu JSON chi tiết từ form hướng dẫn.');
-    };
-
-    const handleCopyDetailTemplate = async () => {
-        try {
-            const template = productForm.detailJson || buildGuidedDetailJson(productForm);
-            await navigator.clipboard.writeText(template);
-            setSuccess('Đã copy mẫu JSON. Bạn có thể lưu vào file backup sau.');
-        } catch {
-            setError('Không thể copy tự động. Vui lòng copy thủ công từ ô JSON.');
-        }
-    };
-
     const resetProductForm = () => {
         setEditingProductId(null);
         setProductForm(initialProductForm);
@@ -441,7 +302,7 @@ export const AdminDashboard = () => {
         setProductForm({
             name: product.name,
             description: product.description || '',
-            detailJson: buildDetailJsonTemplate(product.productId, product.name, product.description || '', product.category || ''),
+            // Details managed in productDetailsBackup.txt
             detailSummary: product.description || '',
             detailBenefits: '',
             detailIngredients: '',
@@ -893,7 +754,7 @@ export const AdminDashboard = () => {
                     <div className={styles.guidePanel}>
                         <h3 className={styles.guideTitle}>Mẫu nhập liệu bàn giao (rất dễ dùng)</h3>
                         <p className={styles.guideText}>
-                            Chỉ cần điền theo 3 bước: (1) thông tin cơ bản, (2) giá + tồn kho, (3) kéo thả ảnh. Nếu cần dữ liệu chi tiết, nhập ở phần mẫu bên dưới rồi bấm tạo JSON.
+                            Chỉ cần điền theo 3 bước: (1) thông tin cơ bản, (2) giá + tồn kho, (3) kéo thả ảnh. Dữ liệu chi tiết cho trang sản phẩm được quản lý thủ công tại <strong>src/data/productDetailsBackup.txt</strong>
                         </p>
                     </div>
 
@@ -992,31 +853,6 @@ export const AdminDashboard = () => {
                                 rows={4}
                             />
                         </div>
-                    </div>
-
-                    <div className={styles.formGroup}>
-                        <div className={styles.templateActions}>
-                            <label className={styles.formLabel}>Mẫu JSON chi tiết (để lưu backup sau)</label>
-                            <div className={styles.formActionsInline}>
-                                <button type="button" className={styles.btnSecondary} onClick={handleGenerateDetailTemplate}>
-                                    Tạo JSON từ mẫu
-                                </button>
-                                <button type="button" className={styles.btnSecondary} onClick={handleCopyDetailTemplate}>
-                                    <FiCopy size={16} />
-                                    <span>Copy JSON</span>
-                                </button>
-                            </div>
-                        </div>
-                        <textarea
-                            className={styles.formTextarea}
-                            value={productForm.detailJson}
-                            onChange={(e) => setProductForm({ ...productForm, detailJson: e.target.value })}
-                            placeholder="Bấm 'Tạo JSON từ mẫu' để tự sinh nội dung"
-                            rows={10}
-                        />
-                        <small className={styles.subText}>
-                            Dữ liệu chi tiết đang được quản lý thủ công tại: src/data/productDetailsBackup.ts
-                        </small>
                     </div>
 
                     <div className={styles.stepHeader}>Bước 2: Giá bán & tồn kho</div>
