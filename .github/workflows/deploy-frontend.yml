@@ -44,19 +44,41 @@ jobs:
     - name: Create .env from secrets
       run: |
         cat > .env << EOF
-        VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}
-        VITE_COGNITO_USER_POOL_ID=${{ secrets.COGNITO_USER_POOL_ID }}
-        VITE_COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }}
+        VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL || secrets.API_BASE_URL }}
+        VITE_COGNITO_USER_POOL_ID=${{ secrets.VITE_COGNITO_USER_POOL_ID || secrets.COGNITO_USER_POOL_ID }}
+        VITE_COGNITO_CLIENT_ID=${{ secrets.VITE_COGNITO_CLIENT_ID || secrets.COGNITO_CLIENT_ID }}
         VITE_COGNITO_REGION=ap-southeast-1
-        VITE_COGNITO_DOMAIN=${{ secrets.COGNITO_DOMAIN }}
-        VITE_CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
-        VITE_CLOUDINARY_UPLOAD_PRESET=${{ secrets.CLOUDINARY_UPLOAD_PRESET }}
+        VITE_COGNITO_DOMAIN=${{ secrets.VITE_COGNITO_DOMAIN || secrets.COGNITO_DOMAIN }}
+        VITE_COGNITO_REDIRECT_URI=${{ secrets.VITE_COGNITO_REDIRECT_URI || 'https://kokororay.github.io/OrchaWeb/' }}
+        VITE_COGNITO_LOGOUT_URI=${{ secrets.VITE_COGNITO_LOGOUT_URI || 'https://kokororay.github.io/OrchaWeb/' }}
+        VITE_CLOUDINARY_CLOUD_NAME=${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || secrets.CLOUDINARY_CLOUD_NAME }}
+        VITE_CLOUDINARY_UPLOAD_PRESET=${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || secrets.CLOUDINARY_UPLOAD_PRESET }}
         VITE_ENABLE_COD=true
         VITE_ENABLE_PAYOS=true
-        VITE_PAYOS_CLIENT_ID=${{ secrets.PAYOS_CLIENT_ID }}
-        VITE_PAYOS_API_KEY=${{ secrets.PAYOS_API_KEY }}
-        VITE_PAYOS_CHECKSUM_KEY=${{ secrets.PAYOS_CHECKSUM_KEY }}
+        VITE_PAYOS_CLIENT_ID=${{ secrets.VITE_PAYOS_CLIENT_ID || secrets.PAYOS_CLIENT_ID }}
+        VITE_PAYOS_API_KEY=${{ secrets.VITE_PAYOS_API_KEY || secrets.PAYOS_API_KEY }}
+        VITE_PAYOS_CHECKSUM_KEY=${{ secrets.VITE_PAYOS_CHECKSUM_KEY || secrets.PAYOS_CHECKSUM_KEY }}
         EOF
+
+    - name: Validate required env vars
+      run: |
+        required_vars=(
+          "VITE_API_BASE_URL"
+          "VITE_COGNITO_USER_POOL_ID"
+          "VITE_COGNITO_CLIENT_ID"
+          "VITE_COGNITO_DOMAIN"
+          "VITE_COGNITO_REDIRECT_URI"
+        )
+
+        for var_name in "${required_vars[@]}"; do
+          var_value=$(grep "^${var_name}=" .env | sed "s/^${var_name}=//")
+          if [ -z "$var_value" ]; then
+            echo "❌ Missing required env var: ${var_name}"
+            exit 1
+          fi
+        done
+
+        echo "✅ Required env vars are present"
 
     - name: Build application
       run: npm run build
