@@ -22,6 +22,11 @@ const PRODUCT_FORM_DRAFT_KEY = 'orcha_admin_product_form_draft_v2';
 interface ProductFormData {
     name: string;
     description: string;
+    detailSummary: string;
+    benefits: string;
+    ingredients: string;
+    usage: string;
+    faq: string;
     category: string;
     price: string;
     salePrice: string;
@@ -34,6 +39,11 @@ interface ProductFormData {
 const initialProductForm: ProductFormData = {
     name: '',
     description: '',
+    detailSummary: '',
+    benefits: '',
+    ingredients: '',
+    usage: '',
+    faq: '',
     category: '',
     price: '',
     salePrice: '',
@@ -232,16 +242,25 @@ export const AdminDashboard = () => {
     }, [categories]);
 
     const uploadProductImage = async (file: File) => {
-        if (!file) return;
+        if (!file) {
+            console.warn('[ImageUpload] No file provided');
+            return;
+        }
+
+        console.log('[ImageUpload] Starting upload for file:', { name: file.name, size: file.size, type: file.type });
 
         setUploading(true);
         setUploadProgress(0);
         setError('');
 
         try {
+            console.log('[ImageUpload] Calling uploadImage service...');
             const result = await uploadImage(file, (progress: UploadProgress) => {
+                console.log('[ImageUpload] Progress:', progress.percentage);
                 setUploadProgress(progress.percentage);
             });
+
+            console.log('[ImageUpload] Upload successful, received URL:', result.secureUrl);
 
             setProductForm((prev) => ({
                 ...prev,
@@ -249,8 +268,10 @@ export const AdminDashboard = () => {
                 imageFile: file,
             }));
             setSuccess('Upload ảnh thành công!');
+            console.log('[ImageUpload] Form state updated with new image URL');
         } catch (uploadError) {
             const message = uploadError instanceof Error ? uploadError.message : 'Upload thất bại';
+            console.error('[ImageUpload] Upload failed:', message);
             setError(message);
         } finally {
             setUploading(false);
@@ -260,8 +281,13 @@ export const AdminDashboard = () => {
 
     // Handle image upload
     const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        console.log('[ImageHandler] File input changed');
         const file = event.target.files?.[0];
-        if (!file) return;
+        if (!file) {
+            console.warn('[ImageHandler] No file selected');
+            return;
+        }
+        console.log('[ImageHandler] File selected:', { name: file.name, size: file.size });
         await uploadProductImage(file);
     };
 
@@ -319,12 +345,17 @@ export const AdminDashboard = () => {
 
             const payload: AdminProductInput = {
                 name: productForm.name.trim(),
-                description: buildDefaultProductDescription(
-                    productForm.description,
+                description: productForm.description.trim() || buildDefaultProductDescription(
+                    '',
                     productForm.name.trim(),
                     categoryNameById[productForm.category] || '',
                     productForm.unit
                 ),
+                detailSummary: productForm.detailSummary.trim() || undefined,
+                benefits: productForm.benefits.trim() || undefined,
+                ingredients: productForm.ingredients.trim() || undefined,
+                usage: productForm.usage.trim() || undefined,
+                faq: productForm.faq.trim() || undefined,
                 category: productForm.category,
                 price,
                 salePrice: salePrice > 0 ? salePrice : 0,
@@ -358,6 +389,11 @@ export const AdminDashboard = () => {
         setProductForm({
             name: product.name,
             description: product.description || '',
+            detailSummary: product.detailSummary || '',
+            benefits: product.benefits || '',
+            ingredients: product.ingredients || '',
+            usage: product.usage || '',
+            faq: product.faq || '',
             category: product.category || '',
             price: product.price.toString(),
             salePrice: product.salePrice?.toString() || '',
@@ -907,6 +943,66 @@ export const AdminDashboard = () => {
                                         />
                                     </div>
                                 </div>
+
+                                {/* Product Detail Section */}
+                                <div className={styles.stepHeader}>Thông tin chi tiết sản phẩm</div>
+
+                                <div className={styles.formGroup}>
+                                    <label className={styles.formLabel}>Tóm tắt chi tiết</label>
+                                    <textarea
+                                        className={styles.formTextarea}
+                                        value={productForm.detailSummary}
+                                        onChange={(e) => setProductForm({ ...productForm, detailSummary: e.target.value })}
+                                        placeholder="Mô tả chi tiết về sản phẩm (không bắt buộc)"
+                                        rows={3}
+                                    />
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label className={styles.formLabel}>Lợi ích</label>
+                                    <textarea
+                                        className={styles.formTextarea}
+                                        value={productForm.benefits}
+                                        onChange={(e) => setProductForm({ ...productForm, benefits: e.target.value })}
+                                        placeholder="Liệt kê các lợi ích của sản phẩm"
+                                        rows={3}
+                                    />
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label className={styles.formLabel}>Thành phần</label>
+                                    <textarea
+                                        className={styles.formTextarea}
+                                        value={productForm.ingredients}
+                                        onChange={(e) => setProductForm({ ...productForm, ingredients: e.target.value })}
+                                        placeholder="Liệt kê các thành phần chính"
+                                        rows={3}
+                                    />
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label className={styles.formLabel}>Cách sử dụng</label>
+                                    <textarea
+                                        className={styles.formTextarea}
+                                        value={productForm.usage}
+                                        onChange={(e) => setProductForm({ ...productForm, usage: e.target.value })}
+                                        placeholder="Hướng dẫn cách sử dụng"
+                                        rows={3}
+                                    />
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label className={styles.formLabel}>Câu hỏi thường gặp</label>
+                                    <textarea
+                                        className={styles.formTextarea}
+                                        value={productForm.faq}
+                                        onChange={(e) => setProductForm({ ...productForm, faq: e.target.value })}
+                                        placeholder="Các câu hỏi thường gặp và câu trả lời"
+                                        rows={3}
+                                    />
+                                </div>
+
+                                <div className={styles.stepHeader}>Hình ảnh sản phẩm</div>
 
                                 <div className={styles.formGroup}>
                                     <label className={styles.formLabel}>Hình ảnh sản phẩm</label>

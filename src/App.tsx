@@ -42,6 +42,16 @@ const HomePage = () => {
   );
 };
 
+const ScrollToTopOnNavigate = () => {
+  const { pathname, search } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [pathname, search]);
+
+  return null;
+};
+
 // Layout wrapper component that uses Outlet
 const LayoutWrapper = ({ logoSrc }: { logoSrc: string }) => {
   return (
@@ -95,6 +105,7 @@ function App() {
     <LanguageProvider>
       <AuthProvider>
         <Router>
+          <ScrollToTopOnNavigate />
           <Routes>
             {/* Auth page - standalone, no MainLayout */}
             <Route path="/auth" element={<AuthPage />} />

@@ -6,6 +6,10 @@
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '';
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'orcha-products';
 
+// Check if using placeholder values
+const isPlaceholderCloudName = !CLOUD_NAME || CLOUD_NAME.includes('your-') || CLOUD_NAME === 'your-cloudinary-name';
+const isPlaceholderPreset = !UPLOAD_PRESET || UPLOAD_PRESET.includes('your-') || UPLOAD_PRESET === 'your-upload-preset';
+
 export interface UploadResponse {
     url: string;
     secureUrl: string;
@@ -29,8 +33,28 @@ export async function uploadImage(
     file: File,
     onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResponse> {
-    if (!CLOUD_NAME) {
-        throw new Error('Cloudinary cloud name chưa được cấu hình. Vui lòng thêm VITE_CLOUDINARY_CLOUD_NAME vào .env');
+    // Check for Cloudinary configuration
+    if (isPlaceholderCloudName) {
+        throw new Error(
+            'Cloudinary chưa được cấu hình đúng.\n\n' +
+            'Vui lòng:\n' +
+            '1. Đăng ký tài khoản miễn phí tại https://cloudinary.com\n' +
+            '2. Lấy Cloud Name từ Dashboard\n' +
+            '3. Tạo Upload Preset (Settings > Upload)\n' +
+            '4. Cập nhật .env với các giá trị thực:\n' +
+            '   VITE_CLOUDINARY_CLOUD_NAME=<your-actual-cloud-name>\n' +
+            '   VITE_CLOUDINARY_UPLOAD_PRESET=<your-actual-preset>'
+        );
+    }
+
+    if (!UPLOAD_PRESET || isPlaceholderPreset) {
+        throw new Error(
+            'Cloudinary upload preset chưa được cấu hình đúng.\n\n' +
+            'Vui lòng tạo Upload Preset trong Cloudinary Dashboard:\n' +
+            '1. Vào Settings > Upload\n' +
+            '2. Tạo preset mới (ví dụ: orcha-products)\n' +
+            '3. Cập nhật VITE_CLOUDINARY_UPLOAD_PRESET trong .env'
+        );
     }
 
     // Validate file
@@ -82,12 +106,17 @@ export async function uploadImage(
                     reject(new Error('Lỗi khi xử lý phản hồi từ Cloudinary'));
                 }
             } else {
-                reject(new Error(`Upload thất bại: ${xhr.statusText}`));
+                try {
+                    const errorResponse = JSON.parse(xhr.responseText);
+                    reject(new Error(`Cloudinary lỗi: ${errorResponse.error?.message || xhr.statusText}`));
+                } catch {
+                    reject(new Error(`Upload thất bại: ${xhr.statusText}`));
+                }
             }
         });
 
         xhr.addEventListener('error', () => {
-            reject(new Error('Lỗi kết nối khi upload ảnh'));
+            reject(new Error('Lỗi kết nối khi upload ảnh (kiểm tra mạng hoặc CORS)'));
         });
 
         xhr.addEventListener('abort', () => {

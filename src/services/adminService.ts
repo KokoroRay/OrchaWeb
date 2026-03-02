@@ -29,6 +29,11 @@ export interface AdminProduct {
     images: string[];
     stock: number;
     unit: string;
+    detailSummary?: string;
+    benefits?: string;
+    ingredients?: string;
+    usage?: string;
+    faq?: string;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
@@ -43,6 +48,11 @@ export interface AdminProductInput {
     images: string[];
     stock: number;
     unit: string;
+    detailSummary?: string;
+    benefits?: string;
+    ingredients?: string;
+    usage?: string;
+    faq?: string;
 }
 
 export type AdminUserRole = 'CUSTOMER' | 'ADMIN';
