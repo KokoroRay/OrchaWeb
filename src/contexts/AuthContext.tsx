@@ -17,16 +17,18 @@ interface UserInfo {
     email?: string;
     name?: string;
     sub?: string;
+    groups?: string[];
 }
 
 interface AuthContextType {
     isAuthenticated: boolean;
     isLoading: boolean;
+    isAdmin: boolean;
     user: UserInfo | null;
     tokens: AuthTokens | null;
 
     // Auth actions
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<{ isAdmin: boolean }>;
     register: (email: string, password: string, name: string) => Promise<{ needsConfirmation: boolean }>;
     confirmRegistration: (email: string, code: string) => Promise<void>;
     resendCode: (email: string) => Promise<void>;
@@ -41,9 +43,44 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const decodeJwtPayload = (token: string): Record<string, unknown> => {
+    try {
+        const parts = token.split('.');
+        if (parts.length < 2) return {};
+
+        const base64Url = parts[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
+        const decoded = atob(padded);
+        return JSON.parse(decoded) as Record<string, unknown>;
+    } catch {
+        return {};
+    }
+};
+
+const extractGroupsFromToken = (idToken: string): string[] => {
+    const payload = decodeJwtPayload(idToken);
+    const rawGroups = payload['cognito:groups'] ?? payload['groups'];
+
+    if (Array.isArray(rawGroups)) {
+        return rawGroups.filter((item): item is string => typeof item === 'string').map(group => group.trim()).filter(Boolean);
+    }
+
+    if (typeof rawGroups === 'string') {
+        return rawGroups.split(',').map(group => group.trim()).filter(Boolean);
+    }
+
+    return [];
+};
+
+const hasAdminGroup = (groups: string[]): boolean => {
+    return groups.some(group => group.toLowerCase() === 'admin');
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
     const [user, setUser] = useState<UserInfo | null>(null);
     const [tokens, setTokens] = useState<AuthTokens | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -59,6 +96,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (session) {
                 setTokens(session);
                 setIsAuthenticated(true);
+                const groups = extractGroupsFromToken(session.idToken);
+                setIsAdmin(hasAdminGroup(groups));
 
                 const attrs = await getCurrentUserAttributes();
                 if (attrs) {
@@ -66,12 +105,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         email: attrs['email'],
                         name: attrs['name'] || attrs['email'],
                         sub: attrs['sub'],
+                        groups,
                     });
                 }
             }
         } catch {
             // No valid session
             setIsAuthenticated(false);
+            setIsAdmin(false);
             setUser(null);
             setTokens(null);
         } finally {
@@ -84,6 +125,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const result = await cognitoSignIn(email, password);
         setTokens(result);
         setIsAuthenticated(true);
+        const groups = extractGroupsFromToken(result.idToken);
+        const admin = hasAdminGroup(groups);
+        setIsAdmin(admin);
 
         const attrs = await getCurrentUserAttributes();
         if (attrs) {
@@ -91,8 +135,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 email: attrs['email'],
                 name: attrs['name'] || attrs['email'],
                 sub: attrs['sub'],
+                groups,
             });
         }
+
+        return { isAdmin: admin };
     }, []);
 
     const register = useCallback(async (email: string, password: string, name: string) => {
@@ -118,6 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const logout = useCallback(() => {
         cognitoSignOut();
         setIsAuthenticated(false);
+        setIsAdmin(false);
         setUser(null);
         setTokens(null);
         setError(null);
@@ -140,6 +188,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const value: AuthContextType = {
         isAuthenticated,
         isLoading,
+        isAdmin,
         user,
         tokens,
         login,

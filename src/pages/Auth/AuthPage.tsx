@@ -101,9 +101,9 @@ export const AuthPage = () => {
         setError('');
 
         try {
-            await login(formData.email, formData.password);
+            const loginResult = await login(formData.email, formData.password);
             setSuccess('Đăng nhập thành công!');
-            setTimeout(() => navigate('/'), 1000);
+            setTimeout(() => navigate(loginResult.isAdmin ? '/admin' : '/'), 1000);
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : 'Đã xảy ra lỗi. Vui lòng thử lại.';
 

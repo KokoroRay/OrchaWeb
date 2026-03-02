@@ -1,11 +1,12 @@
-import { HashRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { MainLayout } from './layouts';
 import { Hero, AboutSection, ProductGallery, BlogSection, LoadingSpinner, NotFound, ChatBox } from './components';
 import { ContactPage, FAQPage, BlogPage, AboutBuchaohPage, ProductListPage, ProductDetailPage, AuthPage } from './pages';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { AdminPage } from './pages/Admin/AdminPage';
 
 // Import images from assets
 import logoImage from './assets/logos/Logo.png';
@@ -49,6 +50,24 @@ const LayoutWrapper = ({ logoSrc }: { logoSrc: string }) => {
   );
 };
 
+const AdminRoute = () => {
+  const { isAuthenticated, isLoading, isAdmin } = useAuthContext();
+
+  if (isLoading) {
+    return <LoadingSpinner overlay={true} size="large" text="Đang tải ORCHA..." />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <AdminPage />;
+};
+
 function App() {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -78,6 +97,7 @@ function App() {
           <Routes>
             {/* Auth page - standalone, no MainLayout */}
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/admin" element={<AdminRoute />} />
 
             {/* Main app routes with layout */}
             <Route element={<LayoutWrapper logoSrc={logoImage} />}>
