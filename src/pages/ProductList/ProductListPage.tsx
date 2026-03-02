@@ -27,8 +27,19 @@ export const ProductListPage = () => {
     }, [category]);
 
     const categoryType = fromRouteCategory(category);
+    const isAllProductsPage = !category;
 
     const info = useMemo(() => {
+        if (isAllProductsPage) {
+            return {
+                title: isVi ? 'Sản phẩm ORCHA' : 'ORCHA Products',
+                subtitle: isVi
+                    ? 'Khám phá dòng sản phẩm từ nước trái cây lên men và phân vi sinh tự nhiên'
+                    : 'Discover fermented fruit drinks and natural microbial fertilizers',
+                icon: FaLeaf,
+            };
+        }
+
         if (categoryType === 'drink') {
             return {
                 title: isVi ? 'Nước Uống Lên Men' : 'Fermented Drinks',
@@ -46,14 +57,14 @@ export const ProductListPage = () => {
                 : 'Improving soil and nourishing crops sustainably',
             icon: FaSeedling,
         };
-    }, [categoryType, isVi]);
+    }, [categoryType, isAllProductsPage, isVi]);
 
-    if (!categoryType) {
+    if (!isAllProductsPage && !categoryType) {
         navigate('/');
         return null;
     }
 
-    const list = products.filter((item) => item.kind === categoryType);
+    const list = isAllProductsPage ? products : products.filter((item) => item.kind === categoryType);
     const CategoryIcon = info.icon;
 
     return (
@@ -72,7 +83,7 @@ export const ProductListPage = () => {
                         <button
                             key={product.id}
                             className={styles.card}
-                            onClick={() => navigate(`/products/${category}/${product.slug}`)}
+                            onClick={() => navigate(`/products/${product.kind === 'drink' ? 'nuoc' : 'phan'}/${product.slug}`)}
                         >
                             <div className={styles.cardIcon}>{product.icon}</div>
                             <h3 className={styles.cardTitle}>{isVi ? product.name : product.nameEn}</h3>

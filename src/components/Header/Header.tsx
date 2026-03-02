@@ -249,7 +249,7 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                 {isAuthenticated && (
                     <button 
                         className={styles.cartButton}
-                        onClick={() => navigate('/checkout')}
+                        onClick={() => navigate('/cart')}
                         title="Giỏ hàng"
                     >
                         <FaShoppingCart size={18} />

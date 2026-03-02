@@ -29,6 +29,54 @@ export interface UpdateCartInput {
     quantity: number;
 }
 
+const toNumber = (value: unknown, fallback = 0): number => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const normalizeCartItem = (value: unknown): CartItemWithProduct | null => {
+    if (!value || typeof value !== 'object') return null;
+    const raw = value as Record<string, unknown>;
+
+    const productId = String(raw.productId || raw.id || '').trim();
+    if (!productId) return null;
+
+    return {
+        userId: String(raw.userId || ''),
+        productId,
+        quantity: Math.max(1, toNumber(raw.quantity, 1)),
+        addedAt: String(raw.addedAt || raw.updatedAt || raw.createdAt || ''),
+        productName: String(raw.productName || raw.name || productId),
+        price: toNumber(raw.price),
+        salePrice: raw.salePrice !== undefined ? toNumber(raw.salePrice) : undefined,
+        imageUrl: raw.imageUrl ? String(raw.imageUrl) : undefined,
+        stock: Math.max(0, toNumber(raw.stock, 0)),
+    };
+};
+
+const normalizeCartPayload = (payload: unknown): CartItemWithProduct[] => {
+    if (Array.isArray(payload)) {
+        return payload.map(normalizeCartItem).filter((item): item is CartItemWithProduct => item !== null);
+    }
+
+    if (!payload || typeof payload !== 'object') {
+        return [];
+    }
+
+    const raw = payload as Record<string, unknown>;
+    const candidates = [raw.items, raw.cartItems, raw.data, raw.cart];
+
+    for (const candidate of candidates) {
+        if (Array.isArray(candidate)) {
+            return candidate
+                .map(normalizeCartItem)
+                .filter((item): item is CartItemWithProduct => item !== null);
+        }
+    }
+
+    return [];
+};
+
 /**
  * Service quản lý Giỏ hàng
  */
@@ -44,7 +92,8 @@ export const cartService = {
      * Xem tất cả các mục trong giỏ hàng (có thông tin sản phẩm)
      */
     async getCart(): Promise<CartItemWithProduct[]> {
-        return apiRequest<CartItemWithProduct[]>('/cart');
+        const payload = await apiRequest<unknown>('/cart');
+        return normalizeCartPayload(payload);
     },
 
     /** 

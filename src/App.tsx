@@ -103,6 +103,7 @@ function App() {
             {/* Main app routes with layout */}
             <Route element={<LayoutWrapper logoSrc={logoImage} />}>
               <Route path="/" element={<HomePage />} />
+              <Route path="/products" element={<ProductListPage />} />
               <Route path="/products/:category" element={<ProductListPage />} />
               <Route path="/products/:category/:productId" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />

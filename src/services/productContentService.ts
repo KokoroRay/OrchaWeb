@@ -34,9 +34,28 @@ const inferKind = (product: Pick<AdminProduct, 'category' | 'productId'>): Produ
     return 'drink';
 };
 
+const getSummaryFromDescription = (description: string, fallback: string) => {
+    const line = description
+        .split('\n')
+        .map((item) => item.trim())
+        .find(Boolean);
+
+    return line || fallback;
+};
+
 const createFallbackDetail = (product: AdminProduct): ProductDetail => {
     const displayPrice = product.salePrice && product.salePrice > 0 ? product.salePrice : product.price;
     const kind = inferKind(product);
+    const summary = getSummaryFromDescription(product.description || '', product.name);
+    const commonUsage = kind === 'drink'
+        ? 'Dùng 50-100ml mỗi lần, 1-2 lần/ngày. Lắc đều trước khi dùng.'
+        : 'Pha theo tỉ lệ khuyến nghị trên bao bì, dùng định kỳ cho cây trồng.';
+    const commonTips = kind === 'drink'
+        ? ['Bảo quản lạnh sau khi mở nắp', 'Sử dụng đều đặn để tối ưu hiệu quả']
+        : ['Dùng vào sáng sớm hoặc chiều mát', 'Kết hợp tưới nước để tăng hấp thu'];
+    const commonIngredients = kind === 'drink'
+        ? ['Nguyên liệu trái cây lên men', 'Hệ vi sinh có lợi', 'Nước tinh khiết']
+        : ['Nguyên liệu hữu cơ lên men', 'Vi sinh vật có lợi', 'Khoáng chất tự nhiên'];
 
     return {
         id: product.productId,
@@ -52,10 +71,10 @@ const createFallbackDetail = (product: AdminProduct): ProductDetail => {
         storageEn: '',
         mfg: '',
         mfgEn: '',
-        summary: product.description || product.name,
-        summaryEn: product.description || product.name,
-        definition: product.description || product.name,
-        definitionEn: product.description || product.name,
+        summary,
+        summaryEn: summary,
+        definition: product.description || summary,
+        definitionEn: product.description || summary,
         whyChosen: '',
         whyChosenEn: '',
         technicalReason: '',
@@ -80,16 +99,16 @@ const createFallbackDetail = (product: AdminProduct): ProductDetail => {
         nutritionFacts: [],
         fermentationExplanation: '',
         fermentationExplanationEn: '',
-        ingredients: [],
-        ingredientsEn: [],
-        usage: '',
-        usageEn: '',
+        ingredients: commonIngredients,
+        ingredientsEn: commonIngredients,
+        usage: commonUsage,
+        usageEn: commonUsage,
         faqItems: [],
         blogReferences: [],
         disclaimer: '⚠️ Thực phẩm/bio-product, vui lòng sử dụng theo hướng dẫn.',
         disclaimerEn: '⚠️ Functional/bio product, use as directed.',
-        tips: [],
-        tipsEn: [],
+        tips: commonTips,
+        tipsEn: commonTips,
     };
 };
 
@@ -136,40 +155,32 @@ export const getBackupCatalog = (): ProductCardItem[] => {
 };
 
 export const getCatalogProducts = async (): Promise<ProductCardItem[]> => {
-    const backupList = getBackupCatalog();
-
     try {
         const apiProducts = await adminService.getProducts();
         if (!apiProducts.length) {
-            return backupList;
+            return [];
         }
 
-        const fromApi = apiProducts.map<ProductCardItem>((product) => {
+        return apiProducts.map<ProductCardItem>((product) => {
             const backup = productDetailsBackup[product.productId];
             const kind = inferKind(product);
             const displayPrice = product.salePrice && product.salePrice > 0 ? product.salePrice : product.price;
+            const fallbackSummary = getSummaryFromDescription(product.description || '', product.name);
 
             return {
                 id: product.productId,
                 slug: product.productId,
                 name: product.name,
                 nameEn: backup?.nameEn || product.name,
-                shortDesc: backup?.summary || product.description || product.name,
-                shortDescEn: backup?.summaryEn || product.description || product.name,
+                shortDesc: backup?.summary || fallbackSummary,
+                shortDescEn: backup?.summaryEn || fallbackSummary,
                 price: formatPrice(displayPrice),
                 icon: backup?.icon || (kind === 'drink' ? '🥤' : '🌱'),
                 kind,
             };
         });
-
-        const map = new Map<string, ProductCardItem>();
-        [...backupList, ...fromApi].forEach((item) => {
-            map.set(item.id, item);
-        });
-
-        return Array.from(map.values());
     } catch {
-        return backupList;
+        return [];
     }
 };
 
@@ -180,16 +191,16 @@ export const getProductDetailById = async (productId: string): Promise<ProductDe
         const apiProducts = await adminService.getProducts();
         const apiProduct = apiProducts.find((item) => item.productId === productId);
 
+        if (!apiProduct) {
+            return null;
+        }
+
         if (backup) {
             return mergeBackupWithApi(backup, apiProduct);
         }
 
-        if (apiProduct) {
-            return createFallbackDetail(apiProduct);
-        }
-
-        return null;
+        return createFallbackDetail(apiProduct);
     } catch {
-        return backup || null;
+        return null;
     }
 };

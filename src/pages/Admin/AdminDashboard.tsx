@@ -17,15 +17,11 @@ type AdminTab = 'overview' | 'categories' | 'products' | 'orders' | 'users' | 'f
 type OrderStatus = Order['status'];
 
 const ORDER_STATUSES: OrderStatus[] = ['PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED', 'CANCELLED'];
+const PRODUCT_FORM_DRAFT_KEY = 'orcha_admin_product_form_draft_v2';
 
 interface ProductFormData {
     name: string;
     description: string;
-    detailSummary: string;
-    detailBenefits: string;
-    detailIngredients: string;
-    detailUsage: string;
-    detailFaq: string;
     category: string;
     price: string;
     salePrice: string;
@@ -38,11 +34,6 @@ interface ProductFormData {
 const initialProductForm: ProductFormData = {
     name: '',
     description: '',
-    detailSummary: '',
-    detailBenefits: '',
-    detailIngredients: '',
-    detailUsage: '',
-    detailFaq: '',
     category: '',
     price: '',
     salePrice: '',
@@ -83,6 +74,27 @@ const formatDateTime = (value: string) => {
     return date.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
 };
 
+const buildDefaultProductDescription = (
+    rawDescription: string,
+    name: string,
+    categoryName: string,
+    unit: string
+) => {
+    const headline = rawDescription.trim() || `${name} từ ORCHA`;
+    const normalizedUnit = unit.trim() || 'chai';
+
+    return [
+        headline,
+        '',
+        'Thông tin mặc định:',
+        `- Thương hiệu: ORCHA`,
+        `- Danh mục: ${categoryName || 'Đang cập nhật'}`,
+        `- Quy cách cơ bản: 1 ${normalizedUnit}`,
+        '- Bảo quản: Để nơi khô ráo, tránh ánh nắng trực tiếp.',
+        '- Khuyến nghị: Đọc kỹ hướng dẫn sử dụng trước khi dùng.',
+    ].join('\n');
+};
+
 export const AdminDashboard = () => {
     const { user, logout, isAdmin } = useAuthContext();
     const navigate = useNavigate();
@@ -95,7 +107,7 @@ export const AdminDashboard = () => {
     }, [isAdmin, navigate]);
 
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+    const [activeTab, setActiveTab] = useState<AdminTab>('products');
     const [loading, setLoading] = useState(true);
     const [busyAction, setBusyAction] = useState(false);
     const [error, setError] = useState('');
@@ -112,12 +124,36 @@ export const AdminDashboard = () => {
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [uploading, setUploading] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
+    const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
     const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
     const [categoryForm, setCategoryForm] = useState<CategoryFormData>(initialCategoryForm);
 
     const [orderStatusDraft, setOrderStatusDraft] = useState<Record<string, OrderStatus>>({});
     const [userDrafts, setUserDrafts] = useState<Record<string, { role: AdminUserRole; isActive: boolean }>>({});
+
+    useEffect(() => {
+        try {
+            const draft = localStorage.getItem(PRODUCT_FORM_DRAFT_KEY);
+            if (!draft) return;
+
+            const parsed = JSON.parse(draft) as Partial<ProductFormData>;
+            setProductForm((prev) => ({
+                ...prev,
+                ...parsed,
+                imageFile: null,
+            }));
+        } catch {
+            localStorage.removeItem(PRODUCT_FORM_DRAFT_KEY);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (editingProductId) return;
+
+        const { imageFile: _imageFile, ...draft } = productForm;
+        localStorage.setItem(PRODUCT_FORM_DRAFT_KEY, JSON.stringify(draft));
+    }, [productForm, editingProductId]);
 
     const loadDashboardData = useCallback(async () => {
         setError('');
@@ -250,6 +286,20 @@ export const AdminDashboard = () => {
     const resetProductForm = () => {
         setEditingProductId(null);
         setProductForm(initialProductForm);
+        localStorage.removeItem(PRODUCT_FORM_DRAFT_KEY);
+    };
+
+    const openCreateProductModal = () => {
+        setEditingProductId(null);
+        setIsProductModalOpen(true);
+    };
+
+    const closeProductModal = () => {
+        setIsProductModalOpen(false);
+
+        if (editingProductId) {
+            resetProductForm();
+        }
     };
 
     const handleProductSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -269,7 +319,12 @@ export const AdminDashboard = () => {
 
             const payload: AdminProductInput = {
                 name: productForm.name.trim(),
-                description: productForm.description.trim(),
+                description: buildDefaultProductDescription(
+                    productForm.description,
+                    productForm.name.trim(),
+                    categoryNameById[productForm.category] || '',
+                    productForm.unit
+                ),
                 category: productForm.category,
                 price,
                 salePrice: salePrice > 0 ? salePrice : 0,
@@ -289,6 +344,7 @@ export const AdminDashboard = () => {
             }
 
             resetProductForm();
+            setIsProductModalOpen(false);
         } catch (submitError) {
             const message = submitError instanceof Error ? submitError.message : 'Có lỗi xảy ra';
             setError(message);
@@ -302,12 +358,6 @@ export const AdminDashboard = () => {
         setProductForm({
             name: product.name,
             description: product.description || '',
-            // Details managed in productDetailsBackup.txt
-            detailSummary: product.description || '',
-            detailBenefits: '',
-            detailIngredients: '',
-            detailUsage: '',
-            detailFaq: '',
             category: product.category || '',
             price: product.price.toString(),
             salePrice: product.salePrice?.toString() || '',
@@ -316,7 +366,7 @@ export const AdminDashboard = () => {
             imageUrl: product.images?.[0] || '',
             imageFile: null,
         });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setIsProductModalOpen(true);
     };
 
     const handleDeleteProduct = async (productId: string) => {
@@ -734,233 +784,183 @@ export const AdminDashboard = () => {
     };
 
     const renderProducts = () => {
-        // Use categories from state (fetched from backend in loadDashboardData)
         const categoryOptions = categories.filter((cat) => cat.categoryId !== 'all');
 
         return (
             <div className={styles.contentSection}>
                 <div className={styles.sectionHeader}>
-                    <h2 className={styles.sectionTitle}>
-                        {editingProductId ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
-                    </h2>
-                    {editingProductId && (
-                        <button className={styles.btnSecondary} onClick={resetProductForm}>
-                            Hủy chỉnh sửa
-                        </button>
-                    )}
+                    <h2 className={styles.sectionTitle}>Quản lý sản phẩm</h2>
+                    <button className={styles.btnPrimary} onClick={openCreateProductModal}>
+                        <FiPackage size={16} />
+                        <span>Thêm sản phẩm mới</span>
+                    </button>
                 </div>
 
-                <form className={styles.productForm} onSubmit={handleProductSubmit}>
-                    <div className={styles.guidePanel}>
-                        <h3 className={styles.guideTitle}>Mẫu nhập liệu bàn giao (rất dễ dùng)</h3>
-                        <p className={styles.guideText}>
-                            Chỉ cần điền theo 3 bước: (1) thông tin cơ bản, (2) giá + tồn kho, (3) kéo thả ảnh. Dữ liệu chi tiết cho trang sản phẩm được quản lý thủ công tại <strong>src/data/productDetailsBackup.txt</strong>
-                        </p>
-                    </div>
-
-                    <div className={styles.stepHeader}>Bước 1: Thông tin cơ bản</div>
-                    <div className={styles.formRow}>
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Tên sản phẩm *</label>
-                            <input
-                                type="text"
-                                className={styles.formInput}
-                                value={productForm.name}
-                                onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                                placeholder="Nhập tên sản phẩm"
-                                required
-                            />
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Danh mục *</label>
-                            <select
-                                className={styles.formInput}
-                                value={productForm.category}
-                                onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                                required
-                            >
-                                <option value="">-- Chọn danh mục --</option>
-                                {categoryOptions.map((cat) => (
-                                    <option key={cat.categoryId} value={cat.categoryId}>
-                                        {cat.icon} {cat.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className={styles.formGroup}>
-                        <label className={styles.formLabel}>Mô tả</label>
-                        <textarea
-                            className={styles.formTextarea}
-                            value={productForm.description}
-                            onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                            placeholder="Mô tả chi tiết sản phẩm"
-                            rows={4}
-                        />
-                    </div>
-
-                    <div className={styles.stepHeader}>Bước 1.1: Mẫu điền chi tiết (không bắt buộc)</div>
-                    <div className={styles.templateGrid}>
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Tóm tắt ngắn</label>
-                            <textarea
-                                className={styles.formTextarea}
-                                value={productForm.detailSummary}
-                                onChange={(e) => setProductForm({ ...productForm, detailSummary: e.target.value })}
-                                placeholder="Ví dụ: Sản phẩm lên men từ khóm, hỗ trợ tiêu hóa và tăng đề kháng"
-                                rows={3}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Lợi ích chính (mỗi dòng 1 ý)</label>
-                            <textarea
-                                className={styles.formTextarea}
-                                value={productForm.detailBenefits}
-                                onChange={(e) => setProductForm({ ...productForm, detailBenefits: e.target.value })}
-                                placeholder={'Hỗ trợ tiêu hóa\nTăng cường miễn dịch\nGiảm đầy bụng'}
-                                rows={4}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Thành phần (mỗi dòng 1 ý)</label>
-                            <textarea
-                                className={styles.formTextarea}
-                                value={productForm.detailIngredients}
-                                onChange={(e) => setProductForm({ ...productForm, detailIngredients: e.target.value })}
-                                placeholder={'Khóm lên men\nMật mía\nNước tinh khiết'}
-                                rows={4}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Hướng dẫn sử dụng</label>
-                            <textarea
-                                className={styles.formTextarea}
-                                value={productForm.detailUsage}
-                                onChange={(e) => setProductForm({ ...productForm, detailUsage: e.target.value })}
-                                placeholder={'Uống 20ml sau bữa ăn sáng\nDùng đều 2 lần/ngày'}
-                                rows={4}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Câu hỏi thường gặp (mỗi dòng 1 câu hỏi)</label>
-                            <textarea
-                                className={styles.formTextarea}
-                                value={productForm.detailFaq}
-                                onChange={(e) => setProductForm({ ...productForm, detailFaq: e.target.value })}
-                                placeholder={'Ai nên dùng sản phẩm này?\nDùng bao lâu thì thấy hiệu quả?'}
-                                rows={4}
-                            />
-                        </div>
-                    </div>
-
-                    <div className={styles.stepHeader}>Bước 2: Giá bán & tồn kho</div>
-
-                    <div className={styles.formRow}>
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Giá (VNĐ) *</label>
-                            <input
-                                type="number"
-                                className={styles.formInput}
-                                value={productForm.price}
-                                onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-                                placeholder="0"
-                                min="0"
-                                required
-                            />
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Giá khuyến mãi (VNĐ)</label>
-                            <input
-                                type="number"
-                                className={styles.formInput}
-                                value={productForm.salePrice}
-                                onChange={(e) => setProductForm({ ...productForm, salePrice: e.target.value })}
-                                placeholder="0"
-                                min="0"
-                            />
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Tồn kho *</label>
-                            <input
-                                type="number"
-                                className={styles.formInput}
-                                value={productForm.stock}
-                                onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
-                                placeholder="0"
-                                min="0"
-                                required
-                            />
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Đơn vị</label>
-                            <input
-                                type="text"
-                                className={styles.formInput}
-                                value={productForm.unit}
-                                onChange={(e) => setProductForm({ ...productForm, unit: e.target.value })}
-                                placeholder="chai"
-                            />
-                        </div>
-                    </div>
-
-                    <div className={styles.stepHeader}>Bước 3: Hình ảnh sản phẩm (kéo & thả hoặc upload)</div>
-                    <div className={styles.formGroup}>
-                        <label className={styles.formLabel}>Hình ảnh sản phẩm</label>
-                        <div
-                            className={`${styles.imageUploadContainer} ${isDragOver ? styles.imageUploadDragging : ''}`}
-                            onDragOver={handleImageDragOver}
-                            onDragLeave={handleImageDragLeave}
-                            onDrop={handleImageDrop}
-                        >
-                            {productForm.imageUrl && (
-                                <div className={styles.imagePreview}>
-                                    <img src={productForm.imageUrl} alt="Preview" />
-                                </div>
-                            )}
-                            <div className={styles.uploadControls}>
-                                <p className={styles.dropHint}>Kéo ảnh vào khung này để upload nhanh</p>
-                                <label className={styles.uploadBtn}>
-                                    <FiUpload size={18} />
-                                    <span>Chọn ảnh từ máy</span>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        style={{ display: 'none' }}
-                                    />
-                                </label>
-                                {uploading && (
-                                    <div className={styles.uploadProgress}>
-                                        <div className={styles.progressBar}>
-                                            <div
-                                                className={styles.progressFill}
-                                                style={{ width: `${uploadProgress}%` }}
-                                            />
-                                        </div>
-                                        <span>{uploadProgress}%</span>
-                                    </div>
-                                )}
+                {isProductModalOpen && (
+                    <div className={styles.modalOverlay} onClick={(event) => {
+                        if (event.target === event.currentTarget) {
+                            closeProductModal();
+                        }
+                    }}>
+                        <div className={styles.modalPanel}>
+                            <div className={styles.modalHeader}>
+                                <h3 className={styles.modalTitle}>
+                                    {editingProductId ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
+                                </h3>
+                                <button className={styles.btnSecondary} onClick={closeProductModal} type="button">
+                                    Đóng
+                                </button>
                             </div>
+
+                            <form className={styles.productForm} onSubmit={handleProductSubmit}>
+                                <div className={styles.stepHeader}>Thông tin cần nhập</div>
+                                <div className={styles.formRow}>
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.formLabel}>Tên sản phẩm *</label>
+                                        <input
+                                            type="text"
+                                            className={styles.formInput}
+                                            value={productForm.name}
+                                            onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                                            placeholder="Nhập tên sản phẩm"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.formLabel}>Danh mục *</label>
+                                        <select
+                                            className={styles.formInput}
+                                            value={productForm.category}
+                                            onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                                            required
+                                        >
+                                            <option value="">-- Chọn danh mục --</option>
+                                            {categoryOptions.map((cat) => (
+                                                <option key={cat.categoryId} value={cat.categoryId}>
+                                                    {cat.icon} {cat.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label className={styles.formLabel}>Mô tả ngắn *</label>
+                                    <textarea
+                                        className={styles.formTextarea}
+                                        value={productForm.description}
+                                        onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                                        placeholder="Nhập mô tả ngắn. Các phần mặc định còn lại sẽ tự động thêm khi lưu."
+                                        rows={4}
+                                        required
+                                    />
+                                </div>
+
+                                <div className={styles.formRow}>
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.formLabel}>Giá (VNĐ) *</label>
+                                        <input
+                                            type="number"
+                                            className={styles.formInput}
+                                            value={productForm.price}
+                                            onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                                            placeholder="0"
+                                            min="0"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.formLabel}>Giá khuyến mãi (VNĐ)</label>
+                                        <input
+                                            type="number"
+                                            className={styles.formInput}
+                                            value={productForm.salePrice}
+                                            onChange={(e) => setProductForm({ ...productForm, salePrice: e.target.value })}
+                                            placeholder="0"
+                                            min="0"
+                                        />
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.formLabel}>Tồn kho *</label>
+                                        <input
+                                            type="number"
+                                            className={styles.formInput}
+                                            value={productForm.stock}
+                                            onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
+                                            placeholder="0"
+                                            min="0"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label className={styles.formLabel}>Đơn vị</label>
+                                        <input
+                                            type="text"
+                                            className={styles.formInput}
+                                            value={productForm.unit}
+                                            onChange={(e) => setProductForm({ ...productForm, unit: e.target.value })}
+                                            placeholder="chai"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label className={styles.formLabel}>Hình ảnh sản phẩm</label>
+                                    <div
+                                        className={`${styles.imageUploadContainer} ${isDragOver ? styles.imageUploadDragging : ''}`}
+                                        onDragOver={handleImageDragOver}
+                                        onDragLeave={handleImageDragLeave}
+                                        onDrop={handleImageDrop}
+                                    >
+                                        {productForm.imageUrl && (
+                                            <div className={styles.imagePreview}>
+                                                <img src={productForm.imageUrl} alt="Preview" />
+                                            </div>
+                                        )}
+                                        <div className={styles.uploadControls}>
+                                            <p className={styles.dropHint}>Kéo ảnh vào khung này hoặc bấm chọn ảnh</p>
+                                            <label className={styles.uploadBtn}>
+                                                <FiUpload size={18} />
+                                                <span>Chọn ảnh từ máy</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleImageUpload}
+                                                    style={{ display: 'none' }}
+                                                />
+                                            </label>
+                                            {uploading && (
+                                                <div className={styles.uploadProgress}>
+                                                    <div className={styles.progressBar}>
+                                                        <div
+                                                            className={styles.progressFill}
+                                                            style={{ width: `${uploadProgress}%` }}
+                                                        />
+                                                    </div>
+                                                    <span>{uploadProgress}%</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className={styles.formActions}>
+                                    <button type="submit" className={styles.btnPrimary} disabled={busyAction || uploading}>
+                                        {busyAction ? <FiRefreshCw className="spin" /> : <FiSave />}
+                                        <span>{editingProductId ? 'Cập nhật' : 'Thêm mới'}</span>
+                                    </button>
+                                    <button type="button" className={styles.btnSecondary} onClick={closeProductModal}>
+                                        Ẩn popup
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
-
-                    <div className={styles.formActions}>
-                        <button type="submit" className={styles.btnPrimary} disabled={busyAction || uploading}>
-                            {busyAction ? <FiRefreshCw className="spin" /> : <FiSave />}
-                            <span>{editingProductId ? 'Cập nhật' : 'Thêm mới'}</span>
-                        </button>
-                        {editingProductId && (
-                            <button type="button" className={styles.btnSecondary} onClick={resetProductForm}>
-                                Hủy
-                            </button>
-                        )}
-                    </div>
-                </form>
+                )}
 
                 <div className={styles.sectionHeader} style={{ marginTop: '3rem' }}>
                     <h2 className={styles.sectionTitle}>Danh sách sản phẩm ({products.length})</h2>

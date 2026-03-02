@@ -55,22 +55,24 @@ export const ProductDetailPage = () => {
         }));
     };
 
-    const handleAddToCart = async () => {
+    const handleAddToCart = async (): Promise<boolean> => {
         if (!isAuthenticated) {
             navigate('/auth');
-            return;
+            return false;
         }
 
-        if (!productId) return;
+        if (!productId) return false;
 
         setAddingToCart(true);
         try {
             await cartService.addItem({ productId, quantity });
             setCartMessage(isVi ? '✓ Đã thêm vào giỏ hàng' : '✓ Added to cart');
             setQuantity(1);
+            return true;
         } catch (error) {
             const message = error instanceof Error ? error.message : (isVi ? 'Lỗi khi thêm vào giỏ hàng' : 'Error adding to cart');
             setCartMessage(`✗ ${message}`);
+            return false;
         } finally {
             setAddingToCart(false);
             setTimeout(() => setCartMessage(''), 3000);
@@ -169,9 +171,11 @@ export const ProductDetailPage = () => {
 
                         <button
                             className={styles.ctaSecondary}
-                            onClick={() => {
-                                void handleAddToCart();
-                                setTimeout(() => navigate('/checkout'), 500);
+                            onClick={async () => {
+                                const success = await handleAddToCart();
+                                if (success) {
+                                    navigate('/checkout');
+                                }
                             }}
                             disabled={addingToCart}
                         >
