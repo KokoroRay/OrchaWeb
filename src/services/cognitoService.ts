@@ -7,10 +7,31 @@ import {
     type ISignUpResult,
 } from 'amazon-cognito-identity-js';
 
-const userPool = new CognitoUserPool({
-    UserPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
-    ClientId: import.meta.env.VITE_COGNITO_CLIENT_ID,
-});
+let userPoolInstance: CognitoUserPool | null = null;
+
+function requireEnv(name: 'VITE_COGNITO_USER_POOL_ID' | 'VITE_COGNITO_CLIENT_ID' | 'VITE_COGNITO_DOMAIN' | 'VITE_COGNITO_REDIRECT_URI'): string {
+    const value = import.meta.env[name]?.toString().trim();
+    if (!value) {
+        throw new Error(`Thiếu biến môi trường ${name}. Vui lòng cấu hình trong .env hoặc GitHub Secrets.`);
+    }
+    return value;
+}
+
+function getUserPool(): CognitoUserPool {
+    if (userPoolInstance) {
+        return userPoolInstance;
+    }
+
+    const userPoolId = requireEnv('VITE_COGNITO_USER_POOL_ID');
+    const clientId = requireEnv('VITE_COGNITO_CLIENT_ID');
+
+    userPoolInstance = new CognitoUserPool({
+        UserPoolId: userPoolId,
+        ClientId: clientId,
+    });
+
+    return userPoolInstance;
+}
 
 export interface AuthTokens {
     idToken: string;
@@ -30,6 +51,7 @@ export const signUp = (
     name: string
 ): Promise<SignUpResult> => {
     return new Promise((resolve, reject) => {
+        const userPool = getUserPool();
         const attributeList = [
             new CognitoUserAttribute({ Name: 'email', Value: email }),
             new CognitoUserAttribute({ Name: 'name', Value: name }),
@@ -51,6 +73,7 @@ export const signUp = (
 // ====== CONFIRM SIGN UP (verification code) ======
 export const confirmSignUp = (email: string, code: string): Promise<void> => {
     return new Promise((resolve, reject) => {
+        const userPool = getUserPool();
         const cognitoUser = new CognitoUser({
             Username: email,
             Pool: userPool,
@@ -69,6 +92,7 @@ export const confirmSignUp = (email: string, code: string): Promise<void> => {
 // ====== RESEND CONFIRMATION CODE ======
 export const resendConfirmationCode = (email: string): Promise<void> => {
     return new Promise((resolve, reject) => {
+        const userPool = getUserPool();
         const cognitoUser = new CognitoUser({
             Username: email,
             Pool: userPool,
@@ -87,6 +111,7 @@ export const resendConfirmationCode = (email: string): Promise<void> => {
 // ====== SIGN IN ======
 export const signIn = (email: string, password: string): Promise<AuthTokens> => {
     return new Promise((resolve, reject) => {
+        const userPool = getUserPool();
         const cognitoUser = new CognitoUser({
             Username: email,
             Pool: userPool,
@@ -114,6 +139,7 @@ export const signIn = (email: string, password: string): Promise<AuthTokens> => 
 
 // ====== SIGN OUT ======
 export const signOut = (): void => {
+    const userPool = getUserPool();
     const currentUser = userPool.getCurrentUser();
     if (currentUser) {
         currentUser.signOut();
@@ -123,6 +149,7 @@ export const signOut = (): void => {
 // ====== GET CURRENT SESSION ======
 export const getCurrentSession = (): Promise<AuthTokens | null> => {
     return new Promise((resolve) => {
+        const userPool = getUserPool();
         const currentUser = userPool.getCurrentUser();
         if (!currentUser) {
             resolve(null);
@@ -147,6 +174,7 @@ export const getCurrentSession = (): Promise<AuthTokens | null> => {
 // ====== GET CURRENT USER ATTRIBUTES ======
 export const getCurrentUserAttributes = (): Promise<Record<string, string> | null> => {
     return new Promise((resolve) => {
+        const userPool = getUserPool();
         const currentUser = userPool.getCurrentUser();
         if (!currentUser) {
             resolve(null);
@@ -178,6 +206,7 @@ export const getCurrentUserAttributes = (): Promise<Record<string, string> | nul
 // ====== FORGOT PASSWORD ======
 export const forgotPassword = (email: string): Promise<void> => {
     return new Promise((resolve, reject) => {
+        const userPool = getUserPool();
         const cognitoUser = new CognitoUser({
             Username: email,
             Pool: userPool,
@@ -201,6 +230,7 @@ export const confirmForgotPassword = (
     newPassword: string
 ): Promise<void> => {
     return new Promise((resolve, reject) => {
+        const userPool = getUserPool();
         const cognitoUser = new CognitoUser({
             Username: email,
             Pool: userPool,
@@ -219,9 +249,9 @@ export const confirmForgotPassword = (
 
 // ====== GOOGLE SIGN IN (redirect to Cognito OAuth with Google provider) ======
 export const signInWithGoogle = (): void => {
-    const domain = import.meta.env.VITE_COGNITO_DOMAIN;
-    const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
-    const redirectUri = import.meta.env.VITE_COGNITO_REDIRECT_URI;
+    const domain = requireEnv('VITE_COGNITO_DOMAIN');
+    const clientId = requireEnv('VITE_COGNITO_CLIENT_ID');
+    const redirectUri = requireEnv('VITE_COGNITO_REDIRECT_URI');
 
     // Redirect directly to Google (skips Cognito hosted UI)
     const url = `${domain}/oauth2/authorize?identity_provider=Google&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=email+openid+phone`;
