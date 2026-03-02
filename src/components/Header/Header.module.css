@@ -144,6 +144,46 @@
     margin-left: 0.75rem;
 }
 
+.cartButton {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+    color: white;
+    border: 2px solid rgba(239, 120, 154, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 0.75rem;
+}
+
+.cartButton:hover {
+    border-color: var(--color-primary);
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(239, 120, 154, 0.3);
+}
+
+.cartBadge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #ff6b6b;
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.35);
+}
+
 .loginBtn {
     display: inline-flex;
     align-items: center;

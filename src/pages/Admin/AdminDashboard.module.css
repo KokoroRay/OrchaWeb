@@ -396,6 +396,44 @@
     font-weight: 500;
 }
 
+/* Overview Container with Charts */
+.overviewContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.chartsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 2rem;
+}
+
+.chartCard {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--admin-shadow);
+    transition: box-shadow 0.2s ease;
+}
+
+.chartCard:hover {
+    box-shadow: var(--admin-shadow-lg);
+}
+
+.chartCard.fullWidth {
+    grid-column: 1 / -1;
+}
+
+.chartTitle {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--admin-text);
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--admin-border);
+}
+
 /* ============================================================
    CONTENT SECTIONS
    ============================================================ */
@@ -878,6 +916,14 @@
 
     .alertCard {
         grid-column: span 1;
+    }
+
+    .chartsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .chartCard.fullWidth {
+        grid-column: 1;
     }
 }
 

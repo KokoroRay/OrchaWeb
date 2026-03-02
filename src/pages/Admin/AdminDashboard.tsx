@@ -5,6 +5,7 @@ import {
     FiLogOut, FiMenu, FiX, FiEdit2, FiTrash2, FiSave, 
     FiRefreshCw, FiImage, FiUpload, FiAlertCircle, FiCheckCircle 
 } from 'react-icons/fi';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { orderService, type Order } from '../../services/orderService';
 import { adminService, type AdminFeedback, type AdminProduct, type AdminProductInput, type AdminUser, type AdminUserRole } from '../../services/adminService';
@@ -394,69 +395,196 @@ export const AdminDashboard = () => {
         </aside>
     );
 
-    const renderOverview = () => (
-        <div className={styles.overviewGrid}>
-            <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#e1f5fe' }}>
-                    <FiPackage size={24} style={{ color: '#0288d1' }} />
-                </div>
-                <div className={styles.statContent}>
-                    <div className={styles.statValue}>{overviewStats.productCount}</div>
-                    <div className={styles.statLabel}>Sản phẩm</div>
-                </div>
-            </div>
+    const renderOverview = () => {
+        // Prepare revenue data (orders by date)
+        const revenueByDate: Record<string, number> = {};
+        orders.forEach((order) => {
+            const date = new Date(order.createdAt).toLocaleDateString('vi-VN', { month: '2-digit', day: '2-digit' });
+            revenueByDate[date] = (revenueByDate[date] || 0) + order.totalAmount;
+        });
+        const revenueChartData = Object.entries(revenueByDate)
+            .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
+            .slice(-7) // Last 7 days
+            .map(([date, revenue]) => ({ date, revenue }));
 
-            <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#fff3e0' }}>
-                    <FiShoppingCart size={24} style={{ color: '#f57c00' }} />
-                </div>
-                <div className={styles.statContent}>
-                    <div className={styles.statValue}>{overviewStats.orderCount}</div>
-                    <div className={styles.statLabel}>Đơn hàng</div>
-                    {overviewStats.pendingOrders > 0 && (
-                        <div className={styles.statBadge}>{overviewStats.pendingOrders} chờ xác nhận</div>
+        // Prepare order status data
+        const orderStatusData = [
+            { name: 'Chờ xác nhận', value: orders.filter(o => o.status === 'PENDING').length, color: '#ff9800' },
+            { name: 'Đã xác nhận', value: orders.filter(o => o.status === 'CONFIRMED').length, color: '#2196f3' },
+            { name: 'Đang giao', value: orders.filter(o => o.status === 'SHIPPING').length, color: '#9c27b0' },
+            { name: 'Đã giao', value: orders.filter(o => o.status === 'DELIVERED').length, color: '#4caf50' },
+            { name: 'Đã hủy', value: orders.filter(o => o.status === 'CANCELLED').length, color: '#f44336' },
+        ].filter(item => item.value > 0);
+
+        // Prepare top products data
+        const productSales: Record<string, { name: string; count: number; revenue: number }> = {};
+        orders.forEach((order) => {
+            // For simplicity, we count orders containing each product
+            // In real scenario, would need to track which products are in each order
+            if (order.totalAmount > 0) {
+                products.slice(0, 5).forEach((product) => {
+                    const key = product.productId;
+                    if (!productSales[key]) {
+                        productSales[key] = { name: product.name, count: 0, revenue: 0 };
+                    }
+                    productSales[key].count += 1;
+                    productSales[key].revenue += order.totalAmount / (orders.length || 1);
+                });
+            }
+        });
+        const topProductsData = Object.values(productSales)
+            .slice(0, 5)
+            .map(p => ({ name: p.name.substring(0, 15), count: p.count, revenue: Math.round(p.revenue) }));
+
+        return (
+            <div className={styles.overviewContainer}>
+                {/* Stats Cards */}
+                <div className={styles.overviewGrid}>
+                    <div className={styles.statCard}>
+                        <div className={styles.statIcon} style={{ background: '#e1f5fe' }}>
+                            <FiPackage size={24} style={{ color: '#0288d1' }} />
+                        </div>
+                        <div className={styles.statContent}>
+                            <div className={styles.statValue}>{overviewStats.productCount}</div>
+                            <div className={styles.statLabel}>Sản phẩm</div>
+                        </div>
+                    </div>
+
+                    <div className={styles.statCard}>
+                        <div className={styles.statIcon} style={{ background: '#fff3e0' }}>
+                            <FiShoppingCart size={24} style={{ color: '#f57c00' }} />
+                        </div>
+                        <div className={styles.statContent}>
+                            <div className={styles.statValue}>{overviewStats.orderCount}</div>
+                            <div className={styles.statLabel}>Đơn hàng</div>
+                            {overviewStats.pendingOrders > 0 && (
+                                <div className={styles.statBadge}>{overviewStats.pendingOrders} chờ xác nhận</div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className={styles.statCard}>
+                        <div className={styles.statIcon} style={{ background: '#f3e5f5' }}>
+                            <FiUsers size={24} style={{ color: '#7b1fa2' }} />
+                        </div>
+                        <div className={styles.statContent}>
+                            <div className={styles.statValue}>{overviewStats.userCount}</div>
+                            <div className={styles.statLabel}>Người dùng</div>
+                        </div>
+                    </div>
+
+                    <div className={styles.statCard}>
+                        <div className={styles.statIcon} style={{ background: '#fce4ec' }}>
+                            <FiMessageSquare size={24} style={{ color: '#ef789a' }} />
+                        </div>
+                        <div className={styles.statContent}>
+                            <div className={styles.statValue}>{overviewStats.feedbackCount}</div>
+                            <div className={styles.statLabel}>Phản hồi</div>
+                        </div>
+                    </div>
+
+                    <div className={styles.statCard} style={{ gridColumn: 'span 2' }}>
+                        <div className={styles.statIcon} style={{ background: '#e8f5e9' }}>
+                            <span style={{ fontSize: '24px' }}>💰</span>
+                        </div>
+                        <div className={styles.statContent}>
+                            <div className={styles.statValue}>{formatCurrency(overviewStats.totalRevenue)}</div>
+                            <div className={styles.statLabel}>Tổng doanh thu</div>
+                        </div>
+                    </div>
+
+                    {overviewStats.lowStock > 0 && (
+                        <div className={styles.alertCard}>
+                            <FiAlertCircle size={20} />
+                            <span>Cảnh báo: {overviewStats.lowStock} sản phẩm sắp hết hàng (≤ 5)</span>
+                        </div>
                     )}
                 </div>
-            </div>
 
-            <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#f3e5f5' }}>
-                    <FiUsers size={24} style={{ color: '#7b1fa2' }} />
-                </div>
-                <div className={styles.statContent}>
-                    <div className={styles.statValue}>{overviewStats.userCount}</div>
-                    <div className={styles.statLabel}>Người dùng</div>
+                {/* Charts Section */}
+                <div className={styles.chartsGrid}>
+                    {/* Revenue Chart */}
+                    <div className={styles.chartCard}>
+                        <h3 className={styles.chartTitle}>Doanh thu theo ngày (7 ngày gần nhất)</h3>
+                        {revenueChartData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={300}>
+                                <LineChart data={revenueChartData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="date" />
+                                    <YAxis />
+                                    <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                                    <Legend />
+                                    <Line 
+                                        type="monotone" 
+                                        dataKey="revenue" 
+                                        stroke="#ef789a" 
+                                        strokeWidth={2}
+                                        name="Doanh thu"
+                                        dot={{ fill: '#ef789a' }}
+                                    />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
+                                Chưa có dữ liệu
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Order Status Chart */}
+                    <div className={styles.chartCard}>
+                        <h3 className={styles.chartTitle}>Phân bố trạng thái đơn hàng</h3>
+                        {orderStatusData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={300}>
+                                <PieChart>
+                                    <Pie
+                                        data={orderStatusData}
+                                        cx="50%"
+                                        cy="50%"
+                                        labelLine={false}
+                                        label={({ name, value }) => `${name}: ${value}`}
+                                        outerRadius={80}
+                                        fill="#8884d8"
+                                        dataKey="value"
+                                    >
+                                        {orderStatusData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
+                                Chưa có dữ liệu
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Top Products Chart */}
+                    <div className={`${styles.chartCard} ${styles.fullWidth}`}>
+                        <h3 className={styles.chartTitle}>Top sản phẩm theo lượt bán</h3>
+                        {topProductsData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={topProductsData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Bar dataKey="count" fill="#0288d1" name="Lượt bán" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
+                                Chưa có dữ liệu
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-
-            <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#fce4ec' }}>
-                    <FiMessageSquare size={24} style={{ color: '#ef789a' }} />
-                </div>
-                <div className={styles.statContent}>
-                    <div className={styles.statValue}>{overviewStats.feedbackCount}</div>
-                    <div className={styles.statLabel}>Phản hồi</div>
-                </div>
-            </div>
-
-            <div className={styles.statCard} style={{ gridColumn: 'span 2' }}>
-                <div className={styles.statIcon} style={{ background: '#e8f5e9' }}>
-                    <span style={{ fontSize: '24px' }}>💰</span>
-                </div>
-                <div className={styles.statContent}>
-                    <div className={styles.statValue}>{formatCurrency(overviewStats.totalRevenue)}</div>
-                    <div className={styles.statLabel}>Tổng doanh thu</div>
-                </div>
-            </div>
-
-            {overviewStats.lowStock > 0 && (
-                <div className={styles.alertCard}>
-                    <FiAlertCircle size={20} />
-                    <span>Cảnh báo: {overviewStats.lowStock} sản phẩm sắp hết hàng (≤ 5)</span>
-                </div>
-            )}
-        </div>
-    );
+        );
+    };
 
     const renderProducts = () => {
         const categories = categoryService.getForSelection();

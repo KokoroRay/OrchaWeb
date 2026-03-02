@@ -12,10 +12,12 @@ import {
     FaNewspaper,
     FaEnvelope,
     FaUser,
-    FaSignOutAlt
+    FaSignOutAlt,
+    FaShoppingCart
 } from 'react-icons/fa';
 import { SearchBox } from '../SearchBox';
 import { LanguageSwitcher } from '../LanguageSwitcher';
+import { cartService } from '../../services/cartService';
 
 interface HeaderProps {
     logoSrc?: string;
@@ -29,7 +31,26 @@ export const Header = ({ logoSrc }: HeaderProps) => {
     const [isProductsDropdownOpen, setIsProductsDropdownOpen] = useState(false);
     const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false);
     const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+    const [cartCount, setCartCount] = useState(0);
     const { isAuthenticated, user, logout } = useAuthContext();
+
+    // Fetch cart count
+    useEffect(() => {
+        const fetchCartCount = async () => {
+            if (isAuthenticated) {
+                try {
+                    const cartItems = await cartService.getCart();
+                    setCartCount(cartItems.length);
+                } catch (error) {
+                    console.error('Failed to fetch cart count:', error);
+                }
+            } else {
+                setCartCount(0);
+            }
+        };
+
+        fetchCartCount();
+    }, [isAuthenticated]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -53,19 +74,29 @@ export const Header = ({ logoSrc }: HeaderProps) => {
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
+            
+            // Close mobile menu
             if (isMenuOpen && !target.closest(`.${styles.nav}`) && !target.closest(`.${styles.hamburger}`)) {
                 setIsMenuOpen(false);
             }
+            
+            // Close product dropdown
+            if (isProductsDropdownOpen && !target.closest(`.${styles.hasDropdown}`)) {
+                setIsProductsDropdownOpen(false);
+            }
+            
+            // Close user dropdown
+            if (isUserDropdownOpen && !target.closest(`.${styles.userMenu}`)) {
+                setIsUserDropdownOpen(false);
+            }
         };
 
-        if (isMenuOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
+        document.addEventListener('mousedown', handleClickOutside);
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isMenuOpen]);
+    }, [isMenuOpen, isProductsDropdownOpen, isUserDropdownOpen]);
 
     const handleSearch = (query: string) => {
         console.log('Searching for:', query);
@@ -203,6 +234,20 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                 <div className={styles.languageContainer}>
                     <LanguageSwitcher />
                 </div>
+
+                {/* Cart Icon */}
+                {isAuthenticated && (
+                    <button 
+                        className={styles.cartButton}
+                        onClick={() => navigate('/checkout')}
+                        title="Giỏ hàng"
+                    >
+                        <FaShoppingCart size={18} />
+                        {cartCount > 0 && (
+                            <span className={styles.cartBadge}>{cartCount}</span>
+                        )}
+                    </button>
+                )}
 
                 {/* Auth Button */}
                 <div className={styles.authContainer}>
