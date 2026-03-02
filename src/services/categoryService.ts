@@ -3,6 +3,8 @@
  * Quản lý danh mục sản phẩm
  */
 
+import { adminService, type AdminCategory } from './adminService.ts';
+
 export interface Category {
     id: string;
     name: string;
@@ -12,7 +14,7 @@ export interface Category {
     productCount?: number;
 }
 
-// Danh sách category mặc định cho ORCHA
+// Fallback categories nếu backend không hoạt động
 export const DEFAULT_CATEGORIES: Category[] = [
     {
         id: 'all',
@@ -22,88 +24,107 @@ export const DEFAULT_CATEGORIES: Category[] = [
         description: 'Xem tất cả sản phẩm',
     },
     {
-        id: 'health',
-        name: 'Sức khỏe phụ nữ',
-        nameEn: 'Women\'s Health',
-        icon: '💖',
-        description: 'Sản phẩm chăm sóc sức khỏe phụ nữ',
+        id: 'nuoc',
+        name: 'Nước lên men',
+        nameEn: 'Fermented Water',
+        icon: '🥤',
+        description: 'Nước lên men từ khóm',
     },
     {
-        id: 'beauty',
-        name: 'Làm đẹp',
-        nameEn: 'Beauty',
-        icon: '✨',
-        description: 'Sản phẩm làm đẹp và chăm sóc da',
-    },
-    {
-        id: 'supplement',
-        name: 'Thực phẩm chức năng',
-        nameEn: 'Supplements',
-        icon: '🌿',
-        description: 'Viên uống bổ sung dinh dưỡng',
-    },
-    {
-        id: 'skincare',
-        name: 'Chăm sóc da',
-        nameEn: 'Skincare',
-        icon: '🧴',
-        description: 'Kem dưỡng, serum, toner',
-    },
-    {
-        id: 'momcare',
-        name: 'Mẹ và bé',
-        nameEn: 'Mom & Baby',
-        icon: '👶',
-        description: 'Sản phẩm cho mẹ bầu và em bé',
-    },
-    {
-        id: 'combo',
-        name: 'Combo tiết kiệm',
-        nameEn: 'Combo Deals',
-        icon: '🎁',
-        description: 'Gói sản phẩm combo giá ưu đãi',
+        id: 'phan',
+        name: 'Phân dữ liệu',
+        nameEn: 'Fertilizer',
+        icon: '🌱',
+        description: 'Phân sinh học',
     },
 ];
+
+// Cache categories từ backend
+let cachedCategories: Category[] | null = null;
+let fetchPromise: Promise<Category[]> | null = null;
+
+const convertAdminCategoryToCategory = (admin: AdminCategory): Category => ({
+    id: admin.categoryId,
+    name: admin.name,
+    nameEn: admin.nameEn,
+    icon: admin.icon,
+    description: admin.description,
+    productCount: admin.productCount,
+});
 
 /**
  * Category Service
  */
 export const categoryService = {
     /**
-     * Lấy tất cả categories
+     * Lấy tất cả categories từ backend (có cache)
      */
-    getAll(): Category[] {
-        return DEFAULT_CATEGORIES;
+    async getAll(): Promise<Category[]> {
+        if (cachedCategories) {
+            return cachedCategories;
+        }
+
+        // Nếu đang fetch, chờ promise
+        if (fetchPromise) {
+            return fetchPromise;
+        }
+
+        // Bắt đầu fetch
+        fetchPromise = (async () => {
+            try {
+                const adminCategories = await adminService.getCategories();
+                cachedCategories = adminCategories.map(convertAdminCategoryToCategory);
+                return cachedCategories;
+            } catch {
+                // Fallback to defaults nếu backend lỗi
+                cachedCategories = DEFAULT_CATEGORIES;
+                return DEFAULT_CATEGORIES;
+            } finally {
+                fetchPromise = null;
+            }
+        })();
+
+        return fetchPromise;
     },
 
     /**
-     * Lấy category theo ID
+     * Lấy categories để dropdown (loại bỏ "all")
      */
-    getById(id: string): Category | undefined {
-        return DEFAULT_CATEGORIES.find((cat) => cat.id === id);
+    async getForSelection(): Promise<Category[]> {
+        const all = await this.getAll();
+        return all.filter((cat) => cat.id !== 'all');
+    },
+
+    /**
+     * Lấy category theo ID (dùng cache)
+     */
+    async getById(id: string): Promise<Category | undefined> {
+        const all = await this.getAll();
+        return all.find((cat) => cat.id === id);
     },
 
     /**
      * Lấy tên category theo ngôn ngữ
      */
-    getName(id: string, language: 'vi' | 'en' = 'vi'): string {
-        const category = this.getById(id);
+    async getName(id: string, language: 'vi' | 'en' = 'vi'): Promise<string> {
+        const category = await this.getById(id);
         if (!category) return id;
         return language === 'vi' ? category.name : category.nameEn;
     },
 
     /**
-     * Lấy categories cho dropdown (loại bỏ "all")
+     * Validate category ID
      */
-    getForSelection(): Category[] {
-        return DEFAULT_CATEGORIES.filter((cat) => cat.id !== 'all');
+    async isValid(id: string): Promise<boolean> {
+        const all = await this.getAll();
+        return all.some((cat) => cat.id === id);
     },
 
     /**
-     * Validate category ID
+     * Xóa cache (dùng khi tạo/cập nhật category)
      */
-    isValid(id: string): boolean {
-        return DEFAULT_CATEGORIES.some((cat) => cat.id === id);
+    invalidateCache(): void {
+        cachedCategories = null;
     },
 
     /**
@@ -112,13 +133,14 @@ export const categoryService = {
     getCategoryColor(id: string): string {
         const colors: Record<string, string> = {
             all: '#6b7280',
-            health: '#ef789a',
-            beauty: '#f59e0b',
-            supplement: '#10b981',
-            skincare: '#8b5cf6',
-            momcare: '#ec4899',
-            combo: '#f43f5e',
+            'nuoc-khom-len-men': '#ef789a',
+            'nuoc': '#0288d1',
+            'phan': '#10b981',
+            'supplement': '#8b5cf6',
+            'skincare': '#f59e0b',
+            'momcare': '#ec4899',
+            'combo': '#f43f5e',
         };
-        return colors[id] || '#6b7280';
+        return colors[id] || '#94a3b8';
     },
 };

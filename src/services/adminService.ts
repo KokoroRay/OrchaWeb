@@ -1,5 +1,24 @@
 import { apiRequest } from './apiClient.ts';
 
+export interface AdminCategory {
+    categoryId: string;
+    name: string;
+    nameEn: string;
+    icon: string;
+    description?: string;
+    productCount?: number;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface AdminCategoryInput {
+    name: string;
+    nameEn: string;
+    icon: string;
+    description?: string;
+}
+
 export interface AdminProduct {
     productId: string;
     name: string;
@@ -51,6 +70,22 @@ export interface AdminFeedback {
 }
 
 export const adminService = {
+    async getCategories(): Promise<AdminCategory[]> {
+        return apiRequest<AdminCategory[]>('/categories');
+    },
+
+    async createCategory(input: AdminCategoryInput): Promise<AdminCategory> {
+        return apiRequest<AdminCategory>('/admin/categories', 'POST', input);
+    },
+
+    async updateCategory(categoryId: string, input: Partial<AdminCategoryInput>): Promise<AdminCategory> {
+        return apiRequest<AdminCategory>(`/admin/categories/${categoryId}`, 'PUT', input);
+    },
+
+    async deleteCategory(categoryId: string): Promise<void> {
+        await apiRequest<void>(`/admin/categories/${categoryId}`, 'DELETE');
+    },
+
     async getProducts(): Promise<AdminProduct[]> {
         return apiRequest<AdminProduct[]>('/products');
     },

@@ -80,6 +80,14 @@ Translations are defined in:
 
 Use the `useLanguage()` hook and `t(key)` to render localized text.
 
+## 🚢 Deployment Policy (CI/CD Only)
+
+- Tất cả deploy production được chạy qua GitHub Actions, không deploy local.
+- Frontend deploy: workflow `.github/workflows/deploy-frontend.yml`.
+- Backend deploy: workflow `.github/workflows/deploy-backend.yml`.
+- CI build/test: workflow `.github/workflows/ci-build-test.yml`.
+- Với backend, lệnh local `make deploy` và `make deploy-ci` đã bị khóa để tránh deploy ngoài CI/CD.
+
 ## 🧩 Notes
 
 - Routing uses `HashRouter` for easy static hosting.

@@ -471,6 +471,39 @@
     background: var(--admin-bg);
 }
 
+.guidePanel {
+    border: 1px solid var(--admin-border);
+    border-left: 4px solid var(--admin-primary);
+    background: white;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.guideTitle {
+    margin: 0 0 0.35rem;
+    font-size: 1rem;
+    color: var(--admin-text);
+}
+
+.guideText {
+    margin: 0;
+    color: var(--admin-text-light);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.stepHeader {
+    margin: 1rem 0 0.75rem;
+    padding: 0.6rem 0.85rem;
+    background: white;
+    border: 1px dashed var(--admin-border);
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--admin-text);
+}
+
 .formRow {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -512,6 +545,27 @@
     min-height: 100px;
 }
 
+.templateGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.templateActions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.4rem;
+}
+
+.formActionsInline {
+    display: inline-flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
 /* Image Upload */
 .imageUploadContainer {
     border: 2px dashed var(--admin-border);
@@ -521,6 +575,11 @@
     flex-direction: column;
     align-items: center;
     gap: 1rem;
+}
+
+.imageUploadDragging {
+    border-color: var(--admin-primary);
+    background: rgba(239, 120, 154, 0.08);
 }
 
 .imagePreview {
@@ -544,6 +603,12 @@
     align-items: center;
     gap: 1rem;
     width: 100%;
+}
+
+.dropHint {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--admin-text-light);
 }
 
 .uploadBtn {

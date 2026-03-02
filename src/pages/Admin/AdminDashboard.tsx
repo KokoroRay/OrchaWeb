@@ -3,18 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { 
     FiHome, FiPackage, FiShoppingCart, FiUsers, FiMessageSquare, 
     FiLogOut, FiMenu, FiX, FiEdit2, FiTrash2, FiSave, 
-    FiRefreshCw, FiImage, FiUpload, FiAlertCircle, FiCheckCircle 
+    FiRefreshCw, FiImage, FiUpload, FiAlertCircle, FiCheckCircle, FiCopy, FiTag 
 } from 'react-icons/fi';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { orderService, type Order } from '../../services/orderService';
-import { adminService, type AdminFeedback, type AdminProduct, type AdminProductInput, type AdminUser, type AdminUserRole } from '../../services/adminService';
-import { categoryService } from '../../services/categoryService';
+import { adminService, type AdminCategory, type AdminCategoryInput, type AdminFeedback, type AdminProduct, type AdminProductInput, type AdminUser, type AdminUserRole } from '../../services/adminService';
 import { uploadImage, type UploadProgress } from '../../services/imageService';
+import { productDetailsBackup } from '../../data/productDetailsBackup';
 import logoImage from '../../assets/logos/Logo.png';
 import styles from './AdminDashboard.module.css';
 
-type AdminTab = 'overview' | 'products' | 'orders' | 'users' | 'feedback';
+type AdminTab = 'overview' | 'categories' | 'products' | 'orders' | 'users' | 'feedback';
 type OrderStatus = Order['status'];
 
 const ORDER_STATUSES: OrderStatus[] = ['PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED', 'CANCELLED'];
@@ -22,6 +22,12 @@ const ORDER_STATUSES: OrderStatus[] = ['PENDING', 'CONFIRMED', 'SHIPPING', 'DELI
 interface ProductFormData {
     name: string;
     description: string;
+    detailJson: string;
+    detailSummary: string;
+    detailBenefits: string;
+    detailIngredients: string;
+    detailUsage: string;
+    detailFaq: string;
     category: string;
     price: string;
     salePrice: string;
@@ -34,6 +40,12 @@ interface ProductFormData {
 const initialProductForm: ProductFormData = {
     name: '',
     description: '',
+    detailJson: '',
+    detailSummary: '',
+    detailBenefits: '',
+    detailIngredients: '',
+    detailUsage: '',
+    detailFaq: '',
     category: '',
     price: '',
     salePrice: '',
@@ -41,6 +53,140 @@ const initialProductForm: ProductFormData = {
     unit: 'chai',
     imageUrl: '',
     imageFile: null,
+};
+
+interface CategoryFormData {
+    name: string;
+    nameEn: string;
+    icon: string;
+    description: string;
+}
+
+const initialCategoryForm: CategoryFormData = {
+    name: '',
+    nameEn: '',
+    icon: '',
+    description: '',
+};
+
+const buildDetailJsonTemplate = (id: string, name: string, description: string, category: string) => {
+    const existing = productDetailsBackup[id];
+    if (existing) {
+        return JSON.stringify(existing, null, 2);
+    }
+
+    const isFertilizer = category.toLowerCase().includes('phan') || id.startsWith('phan-');
+    return JSON.stringify(
+        {
+            id,
+            name,
+            nameEn: name,
+            icon: isFertilizer ? '🌱' : '🥤',
+            price: '0đ',
+            summary: description || name,
+            summaryEn: description || name,
+            definition: '',
+            definitionEn: '',
+            whyChosen: '',
+            whyChosenEn: '',
+            productionModel: '',
+            productionModelEn: '',
+            businessModel: '',
+            businessModelEn: '',
+            circularInput: '',
+            circularInputEn: '',
+            circularOutput: [],
+            circularOutputEn: [],
+            processDescription: '',
+            processDescriptionEn: '',
+            educationalContent: '',
+            educationalContentEn: '',
+            healthBenefits: [],
+            nutritionFacts: [],
+            fermentationExplanation: '',
+            fermentationExplanationEn: '',
+            ingredients: [],
+            ingredientsEn: [],
+            usage: '',
+            usageEn: '',
+            faqItems: [],
+            blogReferences: [],
+            disclaimer: '⚠️ Thực phẩm bảo vệ sức khỏe, không phải thuốc.',
+            disclaimerEn: '⚠️ Functional food, not medicine.',
+            tips: [],
+            tipsEn: [],
+        },
+        null,
+        2
+    );
+};
+
+const slugify = (value: string) =>
+    value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+const splitByLine = (value: string) =>
+    value
+        .split('\n')
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+const buildGuidedDetailJson = (form: ProductFormData) => {
+    const fallbackId = slugify(form.name) || 'san-pham-moi';
+    const isFertilizer = form.category.toLowerCase().includes('phan') || fallbackId.startsWith('phan-');
+
+    return JSON.stringify(
+        {
+            id: fallbackId,
+            name: form.name || 'Sản phẩm mới',
+            nameEn: form.name || 'New Product',
+            icon: isFertilizer ? '🌱' : '🥤',
+            price: form.price ? formatCurrency(Number(form.price)) : '0đ',
+            summary: form.detailSummary || form.description || form.name,
+            summaryEn: form.detailSummary || form.description || form.name,
+            definition: form.description || '',
+            definitionEn: form.description || '',
+            whyChosen: '',
+            whyChosenEn: '',
+            productionModel: '',
+            productionModelEn: '',
+            businessModel: '',
+            businessModelEn: '',
+            circularInput: '',
+            circularInputEn: '',
+            circularOutput: [],
+            circularOutputEn: [],
+            processDescription: '',
+            processDescriptionEn: '',
+            educationalContent: '',
+            educationalContentEn: '',
+            healthBenefits: splitByLine(form.detailBenefits),
+            nutritionFacts: [],
+            fermentationExplanation: '',
+            fermentationExplanationEn: '',
+            ingredients: splitByLine(form.detailIngredients),
+            ingredientsEn: splitByLine(form.detailIngredients),
+            usage: form.detailUsage,
+            usageEn: form.detailUsage,
+            faqItems: splitByLine(form.detailFaq).map((line) => ({
+                question: line,
+                answer: '',
+                questionEn: line,
+                answerEn: '',
+            })),
+            blogReferences: [],
+            disclaimer: '⚠️ Thực phẩm bảo vệ sức khỏe, không phải thuốc.',
+            disclaimerEn: '⚠️ Functional food, not medicine.',
+            tips: splitByLine(form.detailUsage),
+            tipsEn: splitByLine(form.detailUsage),
+        },
+        null,
+        2
+    );
 };
 
 const formatCurrency = (value: number) => {
@@ -80,11 +226,16 @@ export const AdminDashboard = () => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [feedbacks, setFeedbacks] = useState<AdminFeedback[]>([]);
+    const [categories, setCategories] = useState<AdminCategory[]>([]);
 
     const [editingProductId, setEditingProductId] = useState<string | null>(null);
     const [productForm, setProductForm] = useState<ProductFormData>(initialProductForm);
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [uploading, setUploading] = useState(false);
+    const [isDragOver, setIsDragOver] = useState(false);
+
+    const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+    const [categoryForm, setCategoryForm] = useState<CategoryFormData>(initialCategoryForm);
 
     const [orderStatusDraft, setOrderStatusDraft] = useState<Record<string, OrderStatus>>({});
     const [userDrafts, setUserDrafts] = useState<Record<string, { role: AdminUserRole; isActive: boolean }>>({});
@@ -94,17 +245,19 @@ export const AdminDashboard = () => {
         setSuccess('');
 
         try {
-            const [productData, orderData, userData, feedbackData] = await Promise.all([
+            const [productData, orderData, userData, feedbackData, categoryData] = await Promise.all([
                 adminService.getProducts(),
                 orderService.adminGetAll(),
                 adminService.getUsers(),
                 adminService.getFeedbacks(),
+                adminService.getCategories(),
             ]);
 
             setProducts(productData);
             setOrders(orderData);
             setUsers(userData);
             setFeedbacks(feedbackData);
+            setCategories(categoryData);
 
             setOrderStatusDraft(
                 orderData.reduce<Record<string, OrderStatus>>((acc, order) => {
@@ -156,9 +309,14 @@ export const AdminDashboard = () => {
         };
     }, [feedbacks.length, orders, products, users.length]);
 
-    // Handle image upload
-    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+    const categoryNameById = useMemo(() => {
+        return categories.reduce<Record<string, string>>((acc, category) => {
+            acc[category.categoryId] = category.name;
+            return acc;
+        }, {});
+    }, [categories]);
+
+    const uploadProductImage = async (file: File) => {
         if (!file) return;
 
         setUploading(true);
@@ -182,6 +340,49 @@ export const AdminDashboard = () => {
         } finally {
             setUploading(false);
             setUploadProgress(0);
+        }
+    };
+
+    // Handle image upload
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        await uploadProductImage(file);
+    };
+
+    const handleImageDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        setIsDragOver(true);
+    };
+
+    const handleImageDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        setIsDragOver(false);
+    };
+
+    const handleImageDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        setIsDragOver(false);
+        const file = event.dataTransfer.files?.[0];
+        if (!file) return;
+        await uploadProductImage(file);
+    };
+
+    const handleGenerateDetailTemplate = () => {
+        setProductForm((prev) => ({
+            ...prev,
+            detailJson: buildGuidedDetailJson(prev),
+        }));
+        setSuccess('Đã tạo mẫu JSON chi tiết từ form hướng dẫn.');
+    };
+
+    const handleCopyDetailTemplate = async () => {
+        try {
+            const template = productForm.detailJson || buildGuidedDetailJson(productForm);
+            await navigator.clipboard.writeText(template);
+            setSuccess('Đã copy mẫu JSON. Bạn có thể lưu vào file backup sau.');
+        } catch {
+            setError('Không thể copy tự động. Vui lòng copy thủ công từ ô JSON.');
         }
     };
 
@@ -240,6 +441,12 @@ export const AdminDashboard = () => {
         setProductForm({
             name: product.name,
             description: product.description || '',
+            detailJson: buildDetailJsonTemplate(product.productId, product.name, product.description || '', product.category || ''),
+            detailSummary: product.description || '',
+            detailBenefits: '',
+            detailIngredients: '',
+            detailUsage: '',
+            detailFaq: '',
             category: product.category || '',
             price: product.price.toString(),
             salePrice: product.salePrice?.toString() || '',
@@ -325,6 +532,77 @@ export const AdminDashboard = () => {
         }
     };
 
+    const resetCategoryForm = () => {
+        setEditingCategoryId(null);
+        setCategoryForm(initialCategoryForm);
+    };
+
+    const handleCategorySubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setBusyAction(true);
+        setError('');
+        setSuccess('');
+
+        try {
+            if (!categoryForm.name.trim() || !categoryForm.nameEn.trim() || !categoryForm.icon.trim()) {
+                throw new Error('Vui lòng nhập tên (VI), tên (EN), và icon.');
+            }
+
+            const payload: AdminCategoryInput = {
+                name: categoryForm.name.trim(),
+                nameEn: categoryForm.nameEn.trim(),
+                icon: categoryForm.icon.trim(),
+                description: categoryForm.description.trim(),
+            };
+
+            if (editingCategoryId) {
+                const updated = await adminService.updateCategory(editingCategoryId, payload);
+                setCategories((prev) => prev.map((item) => (item.categoryId === updated.categoryId ? updated : item)));
+                setSuccess('Cập nhật danh mục thành công.');
+            } else {
+                const created = await adminService.createCategory(payload);
+                setCategories((prev) => [created, ...prev]);
+                setSuccess('Tạo danh mục mới thành công.');
+            }
+
+            resetCategoryForm();
+        } catch (submitError) {
+            const message = submitError instanceof Error ? submitError.message : 'Có lỗi xảy ra';
+            setError(message);
+        } finally {
+            setBusyAction(false);
+        }
+    };
+
+    const handleEditCategory = (category: AdminCategory) => {
+        setEditingCategoryId(category.categoryId);
+        setCategoryForm({
+            name: category.name,
+            nameEn: category.nameEn,
+            icon: category.icon,
+            description: category.description || '',
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleDeleteCategory = async (categoryId: string) => {
+        if (!confirm('Bạn có chắc chắn muốn xóa danh mục này?')) return;
+
+        setBusyAction(true);
+        setError('');
+
+        try {
+            await adminService.deleteCategory(categoryId);
+            setCategories((prev) => prev.filter((item) => item.categoryId !== categoryId));
+            setSuccess('Xóa danh mục thành công.');
+        } catch (deleteError) {
+            const message = deleteError instanceof Error ? deleteError.message : 'Xóa thất bại';
+            setError(message);
+        } finally {
+            setBusyAction(false);
+        }
+    };
+
     const renderSidebar = () => (
         <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
             <div className={styles.sidebarHeader}>
@@ -347,6 +625,14 @@ export const AdminDashboard = () => {
                 >
                     <FiPackage size={20} />
                     {sidebarOpen && <span>Sản phẩm</span>}
+                </button>
+
+                <button
+                    className={`${styles.navItem} ${activeTab === 'categories' ? styles.navItemActive : ''}`}
+                    onClick={() => setActiveTab('categories')}
+                >
+                    <FiTag size={20} />
+                    {sidebarOpen && <span>Danh mục</span>}
                 </button>
 
                 <button
@@ -587,7 +873,8 @@ export const AdminDashboard = () => {
     };
 
     const renderProducts = () => {
-        const categories = categoryService.getForSelection();
+        // Use categories from state (fetched from backend in loadDashboardData)
+        const categoryOptions = categories.filter((cat) => cat.categoryId !== 'all');
 
         return (
             <div className={styles.contentSection}>
@@ -603,6 +890,14 @@ export const AdminDashboard = () => {
                 </div>
 
                 <form className={styles.productForm} onSubmit={handleProductSubmit}>
+                    <div className={styles.guidePanel}>
+                        <h3 className={styles.guideTitle}>Mẫu nhập liệu bàn giao (rất dễ dùng)</h3>
+                        <p className={styles.guideText}>
+                            Chỉ cần điền theo 3 bước: (1) thông tin cơ bản, (2) giá + tồn kho, (3) kéo thả ảnh. Nếu cần dữ liệu chi tiết, nhập ở phần mẫu bên dưới rồi bấm tạo JSON.
+                        </p>
+                    </div>
+
+                    <div className={styles.stepHeader}>Bước 1: Thông tin cơ bản</div>
                     <div className={styles.formRow}>
                         <div className={styles.formGroup}>
                             <label className={styles.formLabel}>Tên sản phẩm *</label>
@@ -625,8 +920,8 @@ export const AdminDashboard = () => {
                                 required
                             >
                                 <option value="">-- Chọn danh mục --</option>
-                                {categories.map((cat) => (
-                                    <option key={cat.id} value={cat.id}>
+                                {categoryOptions.map((cat) => (
+                                    <option key={cat.categoryId} value={cat.categoryId}>
                                         {cat.icon} {cat.name}
                                     </option>
                                 ))}
@@ -644,6 +939,87 @@ export const AdminDashboard = () => {
                             rows={4}
                         />
                     </div>
+
+                    <div className={styles.stepHeader}>Bước 1.1: Mẫu điền chi tiết (không bắt buộc)</div>
+                    <div className={styles.templateGrid}>
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Tóm tắt ngắn</label>
+                            <textarea
+                                className={styles.formTextarea}
+                                value={productForm.detailSummary}
+                                onChange={(e) => setProductForm({ ...productForm, detailSummary: e.target.value })}
+                                placeholder="Ví dụ: Sản phẩm lên men từ khóm, hỗ trợ tiêu hóa và tăng đề kháng"
+                                rows={3}
+                            />
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Lợi ích chính (mỗi dòng 1 ý)</label>
+                            <textarea
+                                className={styles.formTextarea}
+                                value={productForm.detailBenefits}
+                                onChange={(e) => setProductForm({ ...productForm, detailBenefits: e.target.value })}
+                                placeholder={'Hỗ trợ tiêu hóa\nTăng cường miễn dịch\nGiảm đầy bụng'}
+                                rows={4}
+                            />
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Thành phần (mỗi dòng 1 ý)</label>
+                            <textarea
+                                className={styles.formTextarea}
+                                value={productForm.detailIngredients}
+                                onChange={(e) => setProductForm({ ...productForm, detailIngredients: e.target.value })}
+                                placeholder={'Khóm lên men\nMật mía\nNước tinh khiết'}
+                                rows={4}
+                            />
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Hướng dẫn sử dụng</label>
+                            <textarea
+                                className={styles.formTextarea}
+                                value={productForm.detailUsage}
+                                onChange={(e) => setProductForm({ ...productForm, detailUsage: e.target.value })}
+                                placeholder={'Uống 20ml sau bữa ăn sáng\nDùng đều 2 lần/ngày'}
+                                rows={4}
+                            />
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Câu hỏi thường gặp (mỗi dòng 1 câu hỏi)</label>
+                            <textarea
+                                className={styles.formTextarea}
+                                value={productForm.detailFaq}
+                                onChange={(e) => setProductForm({ ...productForm, detailFaq: e.target.value })}
+                                placeholder={'Ai nên dùng sản phẩm này?\nDùng bao lâu thì thấy hiệu quả?'}
+                                rows={4}
+                            />
+                        </div>
+                    </div>
+
+                    <div className={styles.formGroup}>
+                        <div className={styles.templateActions}>
+                            <label className={styles.formLabel}>Mẫu JSON chi tiết (để lưu backup sau)</label>
+                            <div className={styles.formActionsInline}>
+                                <button type="button" className={styles.btnSecondary} onClick={handleGenerateDetailTemplate}>
+                                    Tạo JSON từ mẫu
+                                </button>
+                                <button type="button" className={styles.btnSecondary} onClick={handleCopyDetailTemplate}>
+                                    <FiCopy size={16} />
+                                    <span>Copy JSON</span>
+                                </button>
+                            </div>
+                        </div>
+                        <textarea
+                            className={styles.formTextarea}
+                            value={productForm.detailJson}
+                            onChange={(e) => setProductForm({ ...productForm, detailJson: e.target.value })}
+                            placeholder="Bấm 'Tạo JSON từ mẫu' để tự sinh nội dung"
+                            rows={10}
+                        />
+                        <small className={styles.subText}>
+                            Dữ liệu chi tiết đang được quản lý thủ công tại: src/data/productDetailsBackup.ts
+                        </small>
+                    </div>
+
+                    <div className={styles.stepHeader}>Bước 2: Giá bán & tồn kho</div>
 
                     <div className={styles.formRow}>
                         <div className={styles.formGroup}>
@@ -696,18 +1072,25 @@ export const AdminDashboard = () => {
                         </div>
                     </div>
 
+                    <div className={styles.stepHeader}>Bước 3: Hình ảnh sản phẩm (kéo & thả hoặc upload)</div>
                     <div className={styles.formGroup}>
                         <label className={styles.formLabel}>Hình ảnh sản phẩm</label>
-                        <div className={styles.imageUploadContainer}>
+                        <div
+                            className={`${styles.imageUploadContainer} ${isDragOver ? styles.imageUploadDragging : ''}`}
+                            onDragOver={handleImageDragOver}
+                            onDragLeave={handleImageDragLeave}
+                            onDrop={handleImageDrop}
+                        >
                             {productForm.imageUrl && (
                                 <div className={styles.imagePreview}>
                                     <img src={productForm.imageUrl} alt="Preview" />
                                 </div>
                             )}
                             <div className={styles.uploadControls}>
+                                <p className={styles.dropHint}>Kéo ảnh vào khung này để upload nhanh</p>
                                 <label className={styles.uploadBtn}>
                                     <FiUpload size={18} />
-                                    <span>Upload ảnh</span>
+                                    <span>Chọn ảnh từ máy</span>
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -776,7 +1159,7 @@ export const AdminDashboard = () => {
                                     </td>
                                     <td>
                                         <span className={styles.categoryBadge}>
-                                            {categoryService.getName(product.category || '')}
+                                            {categoryNameById[product.category || ''] || product.category || '--'}
                                         </span>
                                     </td>
                                     <td>
@@ -802,6 +1185,135 @@ export const AdminDashboard = () => {
                                             <button
                                                 className={styles.btnDelete}
                                                 onClick={() => handleDeleteProduct(product.productId)}
+                                                title="Xóa"
+                                            >
+                                                <FiTrash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        );
+    };
+
+    const renderCategories = () => {
+        return (
+            <div className={styles.contentSection}>
+                <div className={styles.sectionHeader}>
+                    <h2 className={styles.sectionTitle}>
+                        {editingCategoryId ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới'}
+                    </h2>
+                    {editingCategoryId && (
+                        <button className={styles.btnSecondary} onClick={resetCategoryForm}>
+                            Hủy chỉnh sửa
+                        </button>
+                    )}
+                </div>
+
+                <form className={styles.productForm} onSubmit={handleCategorySubmit}>
+                    <div className={styles.formRow}>
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Tên danh mục (Việt Nam) *</label>
+                            <input
+                                type="text"
+                                className={styles.formInput}
+                                value={categoryForm.name}
+                                onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                                placeholder="Ví dụ: Nước lên men"
+                                required
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Tên danh mục (English) *</label>
+                            <input
+                                type="text"
+                                className={styles.formInput}
+                                value={categoryForm.nameEn}
+                                onChange={(e) => setCategoryForm({ ...categoryForm, nameEn: e.target.value })}
+                                placeholder="Ví dụ: Fermented Water"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className={styles.formRow}>
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Icon (emoji) *</label>
+                            <input
+                                type="text"
+                                className={styles.formInput}
+                                value={categoryForm.icon}
+                                onChange={(e) => setCategoryForm({ ...categoryForm, icon: e.target.value })}
+                                placeholder="🥤"
+                                maxLength={2}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Mô tả (Không bắt buộc)</label>
+                        <textarea
+                            className={styles.formTextarea}
+                            value={categoryForm.description}
+                            onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
+                            placeholder="Mô tả chi tiết danh mục sản phẩm"
+                            rows={3}
+                        />
+                    </div>
+
+                    <div className={styles.formActions}>
+                        <button type="submit" className={styles.btnPrimary} disabled={busyAction}>
+                            {busyAction ? <FiRefreshCw className="spin" /> : <FiSave />}
+                            <span>{editingCategoryId ? 'Cập nhật' : 'Thêm mới'}</span>
+                        </button>
+                        {editingCategoryId && (
+                            <button type="button" className={styles.btnSecondary} onClick={resetCategoryForm}>
+                                Hủy
+                            </button>
+                        )}
+                    </div>
+                </form>
+
+                <div className={styles.sectionHeader} style={{ marginTop: '3rem' }}>
+                    <h2 className={styles.sectionTitle}>Danh sách danh mục ({categories.length})</h2>
+                </div>
+
+                <div className={styles.tableContainer}>
+                    <table className={styles.dataTable}>
+                        <thead>
+                            <tr>
+                                <th>Icon</th>
+                                <th>Tên (VI)</th>
+                                <th>Tên (EN)</th>
+                                <th>Mô tả</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {categories.map((category) => (
+                                <tr key={category.categoryId}>
+                                    <td style={{ fontSize: '1.5rem' }}>{category.icon}</td>
+                                    <td><strong>{category.name}</strong></td>
+                                    <td>{category.nameEn}</td>
+                                    <td className={styles.subText}>{category.description || '--'}</td>
+                                    <td>
+                                        <div className={styles.actionButtons}>
+                                            <button
+                                                className={styles.btnEdit}
+                                                onClick={() => handleEditCategory(category)}
+                                                title="Chỉnh sửa"
+                                            >
+                                                <FiEdit2 size={16} />
+                                            </button>
+                                            <button
+                                                className={styles.btnDelete}
+                                                onClick={() => handleDeleteCategory(category.categoryId)}
                                                 title="Xóa"
                                             >
                                                 <FiTrash2 size={16} />
@@ -1014,6 +1526,8 @@ export const AdminDashboard = () => {
                 return renderOverview();
             case 'products':
                 return renderProducts();
+            case 'categories':
+                return renderCategories();
             case 'orders':
                 return renderOrders();
             case 'users':
@@ -1038,6 +1552,7 @@ export const AdminDashboard = () => {
    <h1 className={styles.pageTitle}>
                         {activeTab === 'overview' && 'Tổng quan'}
                         {activeTab === 'products' && 'Quản lý sản phẩm'}
+                        {activeTab === 'categories' && 'Quản lý danh mục'}
                         {activeTab === 'orders' && 'Quản lý đơn hàng'}
                         {activeTab === 'users' && 'Quản lý người dùng'}
                         {activeTab === 'feedback' && 'Phản hồi khách hàng'}

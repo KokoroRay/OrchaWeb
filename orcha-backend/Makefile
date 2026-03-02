@@ -7,10 +7,12 @@ clean:
 	rm -rf .aws-sam
 
 deploy: build
-	sam deploy --guided
+	@echo "❌ Local deploy bị tắt. Hãy deploy qua GitHub Actions workflow: deploy-backend.yml"
+	@exit 1
 
 deploy-ci: build
-	sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+	@echo "❌ Local deploy bị tắt. Hãy deploy qua GitHub Actions workflow: deploy-backend.yml"
+	@exit 1
 
 local:
 	sam local start-api --warm-containers EAGER

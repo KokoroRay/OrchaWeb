@@ -79,6 +79,7 @@ jobs:
       working-directory: orcha-backend
       run: |
         cd functions/cart && GOOS=linux GOARCH=amd64 go build -o bootstrap main.go
+        cd ../categories && GOOS=linux GOARCH=amd64 go build -o bootstrap main.go
         cd ../feedback && GOOS=linux GOARCH=amd64 go build -o bootstrap main.go
         cd ../orders && GOOS=linux GOARCH=amd64 go build -o bootstrap main.go
         cd ../products && GOOS=linux GOARCH=amd64 go build -o bootstrap main.go

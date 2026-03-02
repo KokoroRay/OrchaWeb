@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuthContext } from '../../contexts/AuthContext';
@@ -33,6 +33,8 @@ export const Header = ({ logoSrc }: HeaderProps) => {
     const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
     const [cartCount, setCartCount] = useState(0);
     const { isAuthenticated, user, logout } = useAuthContext();
+    const productsDropdownRef = useRef<HTMLLIElement | null>(null);
+    const userDropdownRef = useRef<HTMLDivElement | null>(null);
 
     // Fetch cart count
     useEffect(() => {
@@ -70,7 +72,7 @@ export const Header = ({ logoSrc }: HeaderProps) => {
         }
     }, [isMenuOpen]);
 
-    // Close menu when clicking outside
+    // Close dropdowns when clicking outside / pressing Escape
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
@@ -81,20 +83,29 @@ export const Header = ({ logoSrc }: HeaderProps) => {
             }
             
             // Close product dropdown
-            if (isProductsDropdownOpen && !target.closest(`.${styles.hasDropdown}`)) {
+            if (isProductsDropdownOpen && productsDropdownRef.current && !productsDropdownRef.current.contains(target)) {
                 setIsProductsDropdownOpen(false);
             }
             
             // Close user dropdown
-            if (isUserDropdownOpen && !target.closest(`.${styles.userMenu}`)) {
+            if (isUserDropdownOpen && userDropdownRef.current && !userDropdownRef.current.contains(target)) {
                 setIsUserDropdownOpen(false);
             }
         };
 
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key !== 'Escape') return;
+            setIsProductsDropdownOpen(false);
+            setIsUserDropdownOpen(false);
+            setIsMenuOpen(false);
+        };
+
         document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
         };
     }, [isMenuOpen, isProductsDropdownOpen, isUserDropdownOpen]);
 
@@ -163,9 +174,8 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                             return (
                                 <li
                                     key={item.label}
+                                    ref={item.hasDropdown ? productsDropdownRef : undefined}
                                     className={item.hasDropdown ? styles.hasDropdown : ''}
-                                    onMouseEnter={() => item.hasDropdown && setIsProductsDropdownOpen(true)}
-                                    onMouseLeave={() => item.hasDropdown && setIsProductsDropdownOpen(false)}
                                 >
                                     {isProducts ? (
                                         <button
@@ -252,12 +262,8 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                 {/* Auth Button */}
                 <div className={styles.authContainer}>
                     {isAuthenticated && user ? (
-                        <div
-                            className={styles.userMenu}
-                            onMouseEnter={() => setIsUserDropdownOpen(true)}
-                            onMouseLeave={() => setIsUserDropdownOpen(false)}
-                        >
-                            <button className={styles.userAvatar}>
+                        <div className={styles.userMenu} ref={userDropdownRef}>
+                            <button className={styles.userAvatar} onClick={() => setIsUserDropdownOpen((prev) => !prev)}>
                                 <FaUser size={14} />
                             </button>
                             {isUserDropdownOpen && (
@@ -270,7 +276,11 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                                         <FaUser size={14} />
                                         <span>Tài khoản</span>
                                     </Link>
-                                    <button className={styles.dropdownItem} onClick={logout} style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                    <button
+                                        className={styles.dropdownItem}
+                                        onClick={logout}
+                                        style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                                    >
                                         <FaSignOutAlt size={14} />
                                         <span>Đăng xuất</span>
                                     </button>
