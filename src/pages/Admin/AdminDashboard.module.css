@@ -507,6 +507,81 @@
     color: var(--admin-text);
 }
 
+/* ============================================================
+   PRODUCT TEMPLATE SELECTOR
+   ============================================================ */
+
+.templateSection {
+    background: linear-gradient(135deg, #fef3f8 0%, #fef9fc 100%);
+    border: 2px dashed var(--admin-primary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.templateHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--admin-text);
+}
+
+.templateHeader svg {
+    color: var(--admin-primary);
+}
+
+.templateGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.templateCard {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: white;
+    border: 2px solid var(--admin-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.templateCard:hover {
+    border-color: var(--admin-primary);
+    background: #fff5f9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 120, 154, 0.15);
+}
+
+.templateName {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--admin-text);
+}
+
+.templateDesc {
+    font-size: 0.85rem;
+    color: var(--admin-text-light);
+    line-height: 1.4;
+}
+
+.templateNote {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--admin-text-light);
+    text-align: center;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--admin-primary);
+}
+
 .guidePanel {
     border: 1px solid var(--admin-border);
     border-left: 4px solid var(--admin-primary);

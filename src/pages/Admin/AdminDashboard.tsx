@@ -105,6 +105,59 @@ const buildDefaultProductDescription = (
     ].join('\n');
 };
 
+// Product Templates
+interface ProductTemplate {
+    id: string;
+    name: string;
+    category: string;
+    data: Partial<ProductFormData>;
+}
+
+const PRODUCT_TEMPLATES: ProductTemplate[] = [
+    {
+        id: 'drink-fruit',
+        name: '🍹 Nước Uống Trái Cây',
+        category: 'drink',
+        data: {
+            description: 'Nước uống từ trái cây tự nhiên, 100% nguyên chất không đường, không chất bảo quản.',
+            unit: 'chai',
+            detailSummary: 'Sản phẩm nước uống từ trái cây tự nhiên 100%, giữ nguyên hương vị và dinh dưỡng của trái cây tươi. Quy trình sản xuất hiện đại, đảm bảo vệ sinh an toàn thực phẩm.',
+            benefits: '✓ Bổ sung vitamin và khoáng chất tự nhiên\n✓ Tăng cường sức đề kháng\n✓ Hỗ trợ tiêu hóa, thanh lọc cơ thể\n✓ Làm đẹp da, chống lão hóa\n✓ Cung cấp năng lượng tự nhiên',
+            ingredients: '• Nước ép trái cây tự nhiên: 100%\n• Không đường, không chất bảo quản\n• Không màu tổng hợp',
+            usage: '**Cách dùng:**\n1. Lắc đều trước khi uống\n2. Uống trực tiếp hoặc pha loãng với nước\n3. Nên uống lạnh để ngon hơn\n\n**Liều lượng khuyến nghị:**\n- Người lớn: 200-300ml/ngày\n- Trẻ em: 100-150ml/ngày\n\n**Bảo quản:**\n- Nơi khô ráo, thoáng mát\n- Sau khi mở nắp, bảo quản trong tủ lạnh và sử dụng trong 24h',
+            faq: '**1. Sản phẩm có đường không?**\nKhông, sản phẩm 100% từ trái cây tự nhiên, không thêm đường.\n\n**2. Có thể uống hàng ngày không?**\nCó, nên uống mỗi ngày để bổ sung dinh dưỡng.\n\n**3. Trẻ em có uống được không?**\nCó, phù hợp cho trẻ em từ 1 tuổi trở lên.\n\n**4. Hạn sử dụng bao lâu?**\n12 tháng kể từ ngày sản xuất (xem trên bao bì).',
+        },
+    },
+    {
+        id: 'fertilizer-organic',
+        name: '🌱 Phân Bón Hữu Cơ',
+        category: 'fertilizer',
+        data: {
+            description: 'Phân bón hữu cơ sinh học, an toàn cho cây trồng, thân thiện môi trường.',
+            unit: 'chai',
+            detailSummary: 'Phân bón hữu cơ sinh học từ nguồn nguyên liệu tự nhiên, giúp cây phát triển khỏe mạnh, cải thiện đất trồng. Sản phẩm an toàn, không độc hại, thân thiện với môi trường.',
+            benefits: '✓ Bổ sung dinh dưỡng toàn diện cho cây\n✓ Cải thiện cấu trúc đất, tăng độ phì nhiêu\n✓ Kích thích rễ phát triển mạnh\n✓ Tăng khả năng chống chịu sâu bệnh\n✓ An toàn cho người, vật nuôi và môi trường\n✓ Tăng năng suất, chất lượng nông sản',
+            ingredients: '• Vi sinh vật có ích: 10^8 CFU/ml\n• Chất hữu cơ: 30%\n• Đạm (N): 5%\n• Lân (P2O5): 3%\n• Kali (K2O): 2%\n• Vi lượng (Fe, Zn, Mn, Cu, B, Mo)',
+            usage: '**Cách pha:**\n1. Lắc đều chai trước khi pha\n2. Pha loãng: 1 nắp chai (20ml) với 10 lít nước\n3. Khuấy đều\n\n**Cách bón:**\n- Tưới gốc: 2 lần/tuần\n- Phun lá: 1 lần/tuần vào buổi sáng sớm hoặc chiều mát\n\n**Liều lượng:**\n- Rau màu: 20ml/10 lít nước\n- Cây ăn trái: 30ml/10 lít nước\n- Cây hoa, cảnh: 15ml/10 lít nước\n\n**Bảo quản:**\n- Nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp\n- Nhiệt độ 15-30°C',
+            faq: '**1. Có thể dùng cho tất cả loại cây không?**\nCó, phù hợp với tất cả loại cây trồng (rau, hoa, cây ăn trái).\n\n**2. Bao lâu thì thấy hiệu quả?**\nSau 7-10 ngày sử dụng, cây sẽ xanh tốt hơn.\n\n**3. Có thể kết hợp với phân hóa học không?**\nCó, nhưng nên giảm 30-50% lượng phân hóa học.\n\n**4. Có độc hại không?**\nKhông, sản phẩm hoàn toàn từ thiên nhiên, an toàn.\n\n**5. Hạn sử dụng?**\n18 tháng kể từ ngày sản xuất.',
+        },
+    },
+    {
+        id: 'drink-functional',
+        name: '💪 Nước Uống Chức Năng',
+        category: 'drink',
+        data: {
+            description: 'Nước uống chức năng bổ sung vitamin, khoáng chất, giúp tăng cường sức khỏe.',
+            unit: 'chai',
+            detailSummary: 'Nước uống chức năng được bổ sung vitamin, khoáng chất và các dưỡng chất thiết yếu, giúp tăng cường sức khỏe, nâng cao thể lực và tinh thần.',
+            benefits: '✓ Bổ sung vitamin và khoáng chất thiết yếu\n✓ Tăng cường năng lượng và sức bền\n✓ Hỗ trợ trao đổi chất\n✓ Tăng cường miễn dịch\n✓ Cải thiện sức khỏe tim mạch\n✓ Giảm mệt mỏi, căng thẳng',
+            ingredients: '• Nước tinh khiết\n• Vitamin C: 100mg\n• Vitamin B6: 2mg\n• Vitamin B12: 10mcg\n• Kẽm: 5mg\n• Magie: 50mg\n• Chiết xuất thảo mộc tự nhiên',
+            usage: '**Cách dùng:**\n1. Lắc đều trước khi uống\n2. Uống trực tiếp, không pha loãng\n3. Uống lạnh sẽ ngon hơn\n\n**Liều lượng:**\n- Người lớn: 1-2 chai/ngày\n- Uống vào buổi sáng hoặc sau khi vận động\n\n**Lưu ý:**\n- Không dùng thay thế bữa ăn\n- Không dùng cho trẻ dưới 6 tuổi\n- Bảo quản nơi khô ráo, thoáng mát',
+            faq: '**1. Uống khi nào là tốt nhất?**\nSáng sớm hoặc sau khi tập thể dục.\n\n**2. Có thể uống hàng ngày không?**\nCó, nên uống đều đặn để hiệu quả tốt nhất.\n\n**3. Có tác dụng phụ không?**\nKhông, sản phẩm an toàn khi sử dụng đúng liều lượng.\n\n**4. Phụ nữ mang thai có dùng được không?**\nNên tham khảo ý kiến bác sĩ trước khi sử dụng.',
+        },
+    },
+];
+
 export const AdminDashboard = () => {
     const { user, logout, isAdmin } = useAuthContext();
     const navigate = useNavigate();
@@ -313,6 +366,35 @@ export const AdminDashboard = () => {
         setEditingProductId(null);
         setProductForm(initialProductForm);
         localStorage.removeItem(PRODUCT_FORM_DRAFT_KEY);
+    };
+
+    const applyProductTemplate = (templateId: string) => {
+        const template = PRODUCT_TEMPLATES.find((t) => t.id === templateId);
+        if (!template) return;
+
+        setProductForm((prev) => ({
+            ...prev,
+            ...template.data,
+            // Keep existing values for these fields
+            name: prev.name,
+            price: prev.price,
+            salePrice: prev.salePrice,
+            stock: prev.stock,
+            imageUrl: prev.imageUrl,
+            imageFile: prev.imageFile,
+            // Apply template fields
+            category: template.data.category || prev.category,
+            description: template.data.description || prev.description,
+            unit: template.data.unit || prev.unit,
+            detailSummary: template.data.detailSummary || prev.detailSummary,
+            benefits: template.data.benefits || prev.benefits,
+            ingredients: template.data.ingredients || prev.ingredients,
+            usage: template.data.usage || prev.usage,
+            faq: template.data.faq || prev.faq,
+        }));
+
+        setSuccess(`✓ Đã áp dụng mẫu: ${template.name}`);
+        setTimeout(() => setSuccess(''), 3000);
     };
 
     const openCreateProductModal = () => {
@@ -847,6 +929,34 @@ export const AdminDashboard = () => {
                                     Đóng
                                 </button>
                             </div>
+
+                            {/* Template Selector - Only show when creating new product */}
+                            {!editingProductId && (
+                                <div className={styles.templateSection}>
+                                    <div className={styles.templateHeader}>
+                                        <FiTag size={18} />
+                                        <span>Tạo nhanh từ mẫu có sẵn</span>
+                                    </div>
+                                    <div className={styles.templateGrid}>
+                                        {PRODUCT_TEMPLATES.map((template) => (
+                                            <button
+                                                key={template.id}
+                                                type="button"
+                                                className={styles.templateCard}
+                                                onClick={() => applyProductTemplate(template.id)}
+                                            >
+                                                <span className={styles.templateName}>{template.name}</span>
+                                                <span className={styles.templateDesc}>
+                                                    {template.data.description?.substring(0, 50)}...
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className={styles.templateNote}>
+                                        💡 Chọn mẫu để tự động điền thông tin chi tiết. Bạn có thể chỉnh sửa sau.
+                                    </p>
+                                </div>
+                            )}
 
                             <form className={styles.productForm} onSubmit={handleProductSubmit}>
                                 <div className={styles.stepHeader}>Thông tin cần nhập</div>

@@ -92,9 +92,13 @@ export const ProductGallery = () => {
                             >
                                 <div className={styles.cardContent}>
                                     <div className={styles.productImage}>
-                                        <div className={styles.imagePlaceholder}>
-                                            <span className={styles.productIcon}>{product.icon}</span>
-                                        </div>
+                                        {product.imageUrl ? (
+                                            <img src={product.imageUrl} alt={product.name} className={styles.productImg} />
+                                        ) : (
+                                            <div className={styles.imagePlaceholder}>
+                                                <span className={styles.productIcon}>{product.icon}</span>
+                                            </div>
+                                        )}
                                         <div className={styles.typeTag}>
                                             {product.kind === 'drink' ? t('ui.drinkType') : t('ui.fertType')}
                                         </div>

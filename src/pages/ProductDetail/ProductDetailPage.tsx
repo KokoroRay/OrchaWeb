@@ -102,7 +102,11 @@ export const ProductDetailPage = () => {
             <section className={styles.productOverview}>
                 <div className={styles.productGallery}>
                     <div className={styles.mainImage}>
-                        <div className={styles.productIcon}>{product.icon}</div>
+                        {product.imageUrl ? (
+                            <img src={product.imageUrl} alt={product.name} className={styles.productImage} />
+                        ) : (
+                            <div className={styles.productIcon}>{product.icon}</div>
+                        )}
                     </div>
                 </div>
 

@@ -28,6 +28,7 @@ export interface ProductDetail {
   nameEn: string;
   icon: string;
   price: string;
+  imageUrl?: string;
   shopeeUrl?: string;
   size?: string;
   sizeEn?: string;

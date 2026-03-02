@@ -85,7 +85,13 @@ export const ProductListPage = () => {
                             className={styles.card}
                             onClick={() => navigate(`/products/${product.kind === 'drink' ? 'nuoc' : 'phan'}/${product.slug}`)}
                         >
-                            <div className={styles.cardIcon}>{product.icon}</div>
+                            {product.imageUrl ? (
+                                <div className={styles.cardImage}>
+                                    <img src={product.imageUrl} alt={product.name} />
+                                </div>
+                            ) : (
+                                <div className={styles.cardIcon}>{product.icon}</div>
+                            )}
                             <h3 className={styles.cardTitle}>{isVi ? product.name : product.nameEn}</h3>
                             <p className={styles.cardDesc}>{isVi ? product.shortDesc : product.shortDescEn}</p>
                             <span className={styles.cardCta}>

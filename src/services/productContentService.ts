@@ -13,6 +13,7 @@ export interface ProductCardItem {
     price: string;
     icon: string;
     kind: ProductKind;
+    imageUrl?: string;
 }
 
 const formatPrice = (value: number) => {
@@ -63,6 +64,7 @@ const createFallbackDetail = (product: AdminProduct): ProductDetail => {
         nameEn: product.name,
         icon: kind === 'drink' ? '🥤' : '🌱',
         price: formatPrice(displayPrice),
+        imageUrl: product.images?.[0],
         size: product.unit ? `1 ${product.unit}` : '',
         sizeEn: product.unit ? `1 ${product.unit}` : '',
         expiry: '',
@@ -127,6 +129,7 @@ const mergeBackupWithApi = (backup: ProductDetail, apiProduct?: AdminProduct): P
         summary: backup.summary || apiProduct.description || apiProduct.name,
         summaryEn: backup.summaryEn || apiProduct.description || apiProduct.name,
         price: formatPrice(displayPrice),
+        imageUrl: apiProduct.images?.[0] || backup.imageUrl,
     };
 };
 
@@ -177,6 +180,7 @@ export const getCatalogProducts = async (): Promise<ProductCardItem[]> => {
                 price: formatPrice(displayPrice),
                 icon: backup?.icon || (kind === 'drink' ? '🥤' : '🌱'),
                 kind,
+                imageUrl: product.images?.[0] || undefined,
             };
         });
     } catch {
