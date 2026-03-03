@@ -30,7 +30,7 @@ export const NotFound = () => {
                 <div className={styles.suggestions}>
                     <h3 className={styles.suggestionsTitle}>Có thể bạn muốn:</h3>
                     <div className={styles.suggestionGrid}>
-                        <Link to="/OrchaWeb" className={styles.suggestionCard}>
+                        <Link to="/" className={styles.suggestionCard}>
                             <FiHome size={24} />
                             <span>Về trang chủ</span>
                         </Link>

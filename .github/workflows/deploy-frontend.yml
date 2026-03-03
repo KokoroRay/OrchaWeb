@@ -49,8 +49,8 @@ jobs:
         VITE_COGNITO_CLIENT_ID=${{ secrets.VITE_COGNITO_CLIENT_ID || secrets.COGNITO_CLIENT_ID }}
         VITE_COGNITO_REGION=ap-southeast-1
         VITE_COGNITO_DOMAIN=${{ secrets.VITE_COGNITO_DOMAIN || secrets.COGNITO_DOMAIN }}
-        VITE_COGNITO_REDIRECT_URI=${{ secrets.VITE_COGNITO_REDIRECT_URI || 'https://kokororay.github.io/OrchaWeb/' }}
-        VITE_COGNITO_LOGOUT_URI=${{ secrets.VITE_COGNITO_LOGOUT_URI || 'https://kokororay.github.io/OrchaWeb/' }}
+        VITE_COGNITO_REDIRECT_URI=${{ secrets.VITE_COGNITO_REDIRECT_URI || 'https://orcha.io.vn/' }}
+        VITE_COGNITO_LOGOUT_URI=${{ secrets.VITE_COGNITO_LOGOUT_URI || 'https://orcha.io.vn/' }}
         VITE_CLOUDINARY_CLOUD_NAME=${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || secrets.CLOUDINARY_CLOUD_NAME }}
         VITE_CLOUDINARY_UPLOAD_PRESET=${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || secrets.CLOUDINARY_UPLOAD_PRESET }}
         VITE_ENABLE_COD=true
@@ -107,5 +107,5 @@ jobs:
       if: success()
       run: |
         echo "✅ Frontend deployed successfully!"
-        echo "🌐 Live at: https://kokororay.github.io/OrchaWeb"
+        echo "🌐 Live at: https://orcha.io.vn"
         echo "📝 Make sure backend CORS allows this origin"
