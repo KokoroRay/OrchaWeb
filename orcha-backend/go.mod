@@ -1,6 +1,6 @@
 module orcha-backend
 
-go 1.21
+go 1.21.5
 
 require (
 	github.com/aws/aws-lambda-go v1.47.0
@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/ses v1.29.1
 	github.com/google/uuid v1.6.0
+	github.com/payOSHQ/payos-lib-golang v1.0.7
 )
 
 require (

@@ -71,7 +71,11 @@ jobs:
               AdminEmail=${{ secrets.ADMIN_EMAIL }} \
               CloudinaryUrl=${{ secrets.CLOUDINARY_URL }} \
               CognitoUserPoolId=${{ secrets.COGNITO_USER_POOL_ID }} \
-              CognitoUserPoolArn=${{ secrets.COGNITO_USER_POOL_ARN }}
+              CognitoUserPoolArn=${{ secrets.COGNITO_USER_POOL_ARN }} \
+              PayOSClientId=${{ secrets.PAYOS_CLIENT_ID }} \
+              PayOSApiKey=${{ secrets.PAYOS_API_KEY }} \
+              PayOSChecksumKey=${{ secrets.PAYOS_CHECKSUM_KEY }} \
+              PayOSPartnerCode=${{ secrets.PAYOS_PARTNER_CODE }}
 
       - name: Get API URL
         run: |

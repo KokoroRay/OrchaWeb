@@ -41,6 +41,26 @@ Parameters:
   CognitoUserPoolArn:
     Type: String
     Description: Cognito User Pool ARN
+  PayOSClientId:
+    Type: String
+    Description: PayOS Client ID
+    Default: ""
+    NoEcho: true
+  PayOSApiKey:
+    Type: String
+    Description: PayOS API Key
+    Default: ""
+    NoEcho: true
+  PayOSChecksumKey:
+    Type: String
+    Description: PayOS Checksum Key
+    Default: ""
+    NoEcho: true
+  PayOSPartnerCode:
+    Type: String
+    Description: Optional PayOS Partner Code
+    Default: ""
+    NoEcho: true
 
 Resources:
   # ============================================================
@@ -492,6 +512,43 @@ Resources:
           Properties:
             RestApiId: !Ref OrchaApi
             Path: /admin/upload-image
+            Method: POST
+
+  # --- Payment Lambda (PayOS) ---
+  PaymentFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: functions/payment/
+      Handler: bootstrap
+      Environment:
+        Variables:
+          PAYOS_CLIENT_ID: !Ref PayOSClientId
+          PAYOS_API_KEY: !Ref PayOSApiKey
+          PAYOS_CHECKSUM_KEY: !Ref PayOSChecksumKey
+          PAYOS_PARTNER_CODE: !Ref PayOSPartnerCode
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OrdersTable
+      Events:
+        CreatePayOSPayment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /payment/payos/create
+            Method: POST
+        VerifyPayOSPayment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /payment/payos/verify/{orderId}
+            Method: GET
+        CancelPayOSPayment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrchaApi
+            Path: /payment/payos/cancel/{orderId}
             Method: POST
 
 Outputs:
