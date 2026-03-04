@@ -65,20 +65,10 @@ jobs:
             "CloudinaryUrl=${{ secrets.CLOUDINARY_URL }}"
             "CognitoUserPoolId=${{ secrets.COGNITO_USER_POOL_ID }}"
             "CognitoUserPoolArn=${{ secrets.COGNITO_USER_POOL_ARN }}"
+            "PayOSClientId=${{ secrets.VITE_PAYOS_CLIENT_ID }}"
+            "PayOSApiKey=${{ secrets.VITE_PAYOS_API_KEY }}"
+            "PayOSChecksumKey=${{ secrets.VITE_PAYOS_CHECKSUM_KEY }}"
           )
-
-          if [ -n "${{ secrets.PAYOS_CLIENT_ID }}" ]; then
-            PARAM_OVERRIDES+=("PayOSClientId=${{ secrets.PAYOS_CLIENT_ID }}")
-          fi
-          if [ -n "${{ secrets.PAYOS_API_KEY }}" ]; then
-            PARAM_OVERRIDES+=("PayOSApiKey=${{ secrets.PAYOS_API_KEY }}")
-          fi
-          if [ -n "${{ secrets.PAYOS_CHECKSUM_KEY }}" ]; then
-            PARAM_OVERRIDES+=("PayOSChecksumKey=${{ secrets.PAYOS_CHECKSUM_KEY }}")
-          fi
-          if [ -n "${{ secrets.PAYOS_PARTNER_CODE }}" ]; then
-            PARAM_OVERRIDES+=("PayOSPartnerCode=${{ secrets.PAYOS_PARTNER_CODE }}")
-          fi
 
           sam deploy \
             --stack-name ${{ env.SAM_STACK_NAME }} \
