@@ -258,6 +258,48 @@ export const signInWithGoogle = (): void => {
     window.location.href = url;
 };
 
+// ====== HANDLE OAUTH CALLBACK (exchange code for tokens) ======
+export const handleOAuthCallback = async (code: string): Promise<AuthTokens> => {
+    const domain = requireEnv('VITE_COGNITO_DOMAIN');
+    const clientId = requireEnv('VITE_COGNITO_CLIENT_ID');
+    const redirectUri = requireEnv('VITE_COGNITO_REDIRECT_URI');
+
+    const tokenEndpoint = `${domain}/oauth2/token`;
+    
+    const params = new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: clientId,
+        code: code,
+        redirect_uri: redirectUri,
+    });
+
+    try {
+        const response = await fetch(tokenEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: params.toString(),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error_description || 'Failed to exchange authorization code');
+        }
+
+        const data = await response.json();
+        
+        return {
+            idToken: data.id_token,
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+        };
+    } catch (error) {
+        console.error('OAuth callback error:', error);
+        throw new Error('Không thể hoàn tất đăng nhập với Google. Vui lòng thử lại.');
+    }
+};
+
 // ====== ERROR TRANSLATION ======
 function translateCognitoError(err: Error & { code?: string }): Error {
     const errorMap: Record<string, string> = {

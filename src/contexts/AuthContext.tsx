@@ -10,6 +10,7 @@ import {
     forgotPassword as cognitoForgotPassword,
     confirmForgotPassword as cognitoConfirmForgotPassword,
     signInWithGoogle,
+    handleOAuthCallback,
     type AuthTokens,
 } from '../services/cognitoService';
 
@@ -92,6 +93,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const checkSession = async () => {
         try {
+            // First, check if we're returning from OAuth (code parameter in URL)
+            const urlParams = new URLSearchParams(window.location.search);
+            const authCode = urlParams.get('code');
+            
+            if (authCode) {
+                // Exchange authorization code for tokens
+                try {
+                    const oauthTokens = await handleOAuthCallback(authCode);
+                    setTokens(oauthTokens);
+                    setIsAuthenticated(true);
+                    
+                    const groups = extractGroupsFromToken(oauthTokens.idToken);
+                    setIsAdmin(hasAdminGroup(groups));
+
+                    const attrs = await getCurrentUserAttributes();
+                    if (attrs) {
+                        setUser({
+                            email: attrs['email'],
+                            name: attrs['name'] || attrs['email'],
+                            sub: attrs['sub'],
+                            groups,
+                        });
+                    }
+
+                    // Clean URL by removing code parameter
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    return;
+                } catch (error) {
+                    console.error('OAuth callback failed:', error);
+                    setError(error instanceof Error ? error.message : 'Đăng nhập với Google thất bại');
+                }
+            }
+
+            // Check for existing Cognito session
             const session = await getCurrentSession();
             if (session) {
                 setTokens(session);
