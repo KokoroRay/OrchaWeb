@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     FiHome, FiPackage, FiShoppingCart, FiUsers, FiMessageSquare, 
     FiLogOut, FiMenu, FiX, FiEdit2, FiTrash2, FiSave, 
-    FiRefreshCw, FiImage, FiUpload, FiAlertCircle, FiCheckCircle, FiTag 
+    FiRefreshCw, FiImage, FiUpload, FiAlertCircle, FiCheckCircle, FiTag,
+    FiChevronDown, FiChevronUp
 } from 'react-icons/fi';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuthContext } from '../../contexts/AuthContext';
@@ -194,6 +195,7 @@ export const AdminDashboard = () => {
 
     const [orderStatusDraft, setOrderStatusDraft] = useState<Record<string, OrderStatus>>({});
     const [orderRefundDraft, setOrderRefundDraft] = useState<Record<string, Order['refundStatus']>>({});
+    const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
     const [userDrafts, setUserDrafts] = useState<Record<string, { role: AdminUserRole; isActive: boolean }>>({});
 
     useEffect(() => {
@@ -1458,6 +1460,19 @@ export const AdminDashboard = () => {
             return status;
         };
 
+        const getPaymentMethodLabel = (order: Order): 'COD' | 'PAYOS' => {
+            if (order.paymentMethod === 'PAYOS' || order.paymentMethod === 'COD') {
+                return order.paymentMethod;
+            }
+
+            // Legacy fallback: infer from status if old records don't have paymentMethod.
+            if (order.status === 'PENDING_PAYMENT') {
+                return 'PAYOS';
+            }
+
+            return 'COD';
+        };
+
         return (
             <div className={styles.contentSection}>
                 <div className={styles.sectionHeader}>
@@ -1483,101 +1498,139 @@ export const AdminDashboard = () => {
                                 const nextStatus = getNextStatus(order.status);
                                 const canUpdateStatus = nextStatus && order.status !== 'CANCELLED' && order.status !== 'DELIVERED';
                                 const canCancel = order.status !== 'CANCELLED' && order.status !== 'DELIVERED';
-                                const needsRefund = order.paymentMethod === 'PAYOS' && order.status === 'CANCELLED' && order.refundStatus !== 'COMPLETED';
+                                const paymentMethod = getPaymentMethodLabel(order);
+                                const needsRefund = paymentMethod === 'PAYOS' && order.status === 'CANCELLED' && order.refundStatus !== 'COMPLETED';
                                 const hasChanges = (orderStatusDraft[order.orderId] && orderStatusDraft[order.orderId] !== order.status) ||
                                     (orderRefundDraft[order.orderId] && orderRefundDraft[order.orderId] !== order.refundStatus);
+                                const isExpanded = expandedOrderId === order.orderId;
 
                                 return (
-                                    <tr key={order.orderId}>
-                                        <td>
-                                            <strong>{order.orderId.slice(0, 8)}</strong>
-                                        </td>
-                                        <td>
-                                            <div><strong>{order.userName || 'N/A'}</strong></div>
-                                            <div className={styles.subText}>{order.userEmail}</div>
-                                        </td>
-                                        <td>{formatCurrency(order.totalAmount)}</td>
-                                        <td>
-                                            <span className={order.paymentMethod === 'PAYOS' ? styles.badgePayOS : styles.badgeCOD}>
-                                                {order.paymentMethod}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' }}>
-                                                <span className={styles[`status${order.status}`]}>
-                                                    {getStatusLabel(order.status)}
+                                    <Fragment key={order.orderId}>
+                                        <tr>
+                                            <td>
+                                                <strong>{order.orderId.slice(0, 8)}</strong>
+                                            </td>
+                                            <td>
+                                                <div><strong>{order.userName || 'N/A'}</strong></div>
+                                                <div className={styles.subText}>{order.userEmail}</div>
+                                            </td>
+                                            <td>{formatCurrency(order.totalAmount)}</td>
+                                            <td>
+                                                <span className={paymentMethod === 'PAYOS' ? styles.badgePayOS : styles.badgeCOD}>
+                                                    {paymentMethod}
                                                 </span>
-                                                {canUpdateStatus && (
-                                                    <select
-                                                        className={styles.statusSelect}
-                                                        value={orderStatusDraft[order.orderId] || order.status}
-                                                        onChange={(e) =>
-                                                            setOrderStatusDraft({
-                                                                ...orderStatusDraft,
-                                                                [order.orderId]: e.target.value as OrderStatus,
-                                                            })
-                                                        }
-                                                        disabled={busyAction}
-                                                    >
-                                                        <option value={order.status}>-- Chọn --</option>
-                                                        <option value={nextStatus}>{getStatusLabel(nextStatus)}</option>
-                                                    </select>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {order.refundStatus && order.refundStatus !== 'NONE' ? (
+                                            </td>
+                                            <td>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' }}>
-                                                    <span className={order.refundStatus === 'COMPLETED' ? styles.badgeSuccess : styles.badgeWarning}>
-                                                        {getRefundLabel(order.refundStatus)}
+                                                    <span className={styles[`status${order.status}`]}>
+                                                        {getStatusLabel(order.status)}
                                                     </span>
-                                                    {needsRefund && (
+                                                    {canUpdateStatus && (
                                                         <select
                                                             className={styles.statusSelect}
-                                                            value={orderRefundDraft[order.orderId] || order.refundStatus}
+                                                            value={orderStatusDraft[order.orderId] || order.status}
                                                             onChange={(e) =>
-                                                                setOrderRefundDraft({
-                                                                    ...orderRefundDraft,
-                                                                    [order.orderId]: e.target.value as Order['refundStatus'],
+                                                                setOrderStatusDraft({
+                                                                    ...orderStatusDraft,
+                                                                    [order.orderId]: e.target.value as OrderStatus,
                                                                 })
                                                             }
                                                             disabled={busyAction}
                                                         >
-                                                            <option value={order.refundStatus}>-- Chọn --</option>
-                                                            <option value="COMPLETED">Đã hoàn tiền</option>
+                                                            <option value={order.status}>-- Chọn --</option>
+                                                            <option value={nextStatus}>{getStatusLabel(nextStatus)}</option>
                                                         </select>
                                                     )}
                                                 </div>
-                                            ) : (
-                                                <span className={styles.subText}>--</span>
-                                            )}
-                                        </td>
-                                        <td>{formatDateTime(order.createdAt)}</td>
-                                        <td>
-                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                {hasChanges && (
-                                                    <button
-                                                        className={styles.btnSave}
-                                                        onClick={() => handleUpdateOrderStatus(order.orderId)}
-                                                        disabled={busyAction}
-                                                        title="Lưu thay đổi"
-                                                    >
-                                                        <FiSave size={16} />
-                                                    </button>
+                                            </td>
+                                            <td>
+                                                {order.refundStatus && order.refundStatus !== 'NONE' ? (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' }}>
+                                                        <span className={order.refundStatus === 'COMPLETED' ? styles.badgeSuccess : styles.badgeWarning}>
+                                                            {getRefundLabel(order.refundStatus)}
+                                                        </span>
+                                                        {needsRefund && (
+                                                            <select
+                                                                className={styles.statusSelect}
+                                                                value={orderRefundDraft[order.orderId] || order.refundStatus}
+                                                                onChange={(e) =>
+                                                                    setOrderRefundDraft({
+                                                                        ...orderRefundDraft,
+                                                                        [order.orderId]: e.target.value as Order['refundStatus'],
+                                                                    })
+                                                                }
+                                                                disabled={busyAction}
+                                                            >
+                                                                <option value={order.refundStatus}>-- Chọn --</option>
+                                                                <option value="COMPLETED">Đã hoàn tiền</option>
+                                                            </select>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className={styles.subText}>--</span>
                                                 )}
-                                                {canCancel && (
+                                            </td>
+                                            <td>{formatDateTime(order.createdAt)}</td>
+                                            <td>
+                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                     <button
-                                                        className={styles.btnDanger}
-                                                        onClick={() => handleCancelOrder(order.orderId)}
-                                                        disabled={busyAction}
-                                                        title="Hủy đơn hàng"
+                                                        className={styles.btnSecondaryInline}
+                                                        onClick={() => setExpandedOrderId(isExpanded ? null : order.orderId)}
+                                                        title="Xem chi tiết đơn hàng"
                                                     >
-                                                        <FiTrash2 size={16} />
+                                                        {isExpanded ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
                                                     </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
+                                                    {hasChanges && (
+                                                        <button
+                                                            className={styles.btnSave}
+                                                            onClick={() => handleUpdateOrderStatus(order.orderId)}
+                                                            disabled={busyAction}
+                                                            title="Lưu thay đổi"
+                                                        >
+                                                            <FiSave size={16} />
+                                                        </button>
+                                                    )}
+                                                    {canCancel && (
+                                                        <button
+                                                            className={styles.btnDanger}
+                                                            onClick={() => handleCancelOrder(order.orderId)}
+                                                            disabled={busyAction}
+                                                            title="Hủy đơn hàng"
+                                                        >
+                                                            <FiTrash2 size={16} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {isExpanded && (
+                                            <tr>
+                                                <td colSpan={8} className={styles.orderDetailCell}>
+                                                    <div className={styles.orderDetailPanel}>
+                                                        <div className={styles.orderDetailGrid}>
+                                                            <div>
+                                                                <h4>Thong tin giao hang</h4>
+                                                                <p><strong>Nguoi nhan:</strong> {order.shippingName}</p>
+                                                                <p><strong>So dien thoai:</strong> {order.shippingPhone}</p>
+                                                                <p><strong>Dia chi:</strong> {order.shippingAddress}</p>
+                                                                <p><strong>Ghi chu:</strong> {order.note || '--'}</p>
+                                                            </div>
+                                                            <div>
+                                                                <h4>Danh sach san pham</h4>
+                                                                {order.items.map((item, index) => (
+                                                                    <div key={`${order.orderId}-${item.productId}-${index}`} className={styles.orderDetailItem}>
+                                                                        <span>{item.productName}</span>
+                                                                        <span>x{item.quantity}</span>
+                                                                        <span>{formatCurrency(item.price * item.quantity)}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </Fragment>
                                 );
                             })}
                         </tbody>

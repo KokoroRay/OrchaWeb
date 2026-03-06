@@ -32,6 +32,7 @@ var (
 	cartTable     string
 	productsTable string
 	adminEmail    string
+	frontendURL   string
 	sesClient     *ses.Client
 )
 
@@ -40,6 +41,7 @@ func init() {
 	cartTable = os.Getenv("CART_TABLE")
 	productsTable = os.Getenv("PRODUCTS_TABLE")
 	adminEmail = os.Getenv("ADMIN_EMAIL")
+	frontendURL = os.Getenv("FRONTEND_URL")
 
 	cfg, _ := config.LoadDefaultConfig(context.TODO())
 	sesClient = ses.NewFromConfig(cfg)
@@ -257,41 +259,59 @@ func createOrder(ctx context.Context, request events.APIGatewayProxyRequest) (ev
 	}
 
 	// 4. Send email notification to admin via SES
-	go sendOrderNotification(order)
+	if err := sendOrderNotification(ctx, order); err != nil {
+		fmt.Printf("sendOrderNotification error: %v\n", err)
+	}
 
 	return response.Success(201, order), nil
 }
 
-func sendOrderNotification(order models.Order) {
+func sendOrderNotification(ctx context.Context, order models.Order) error {
 	if adminEmail == "" {
-		return
+		return nil
 	}
 
-	subject := fmt.Sprintf("🛒 Đơn hàng mới #%s", order.OrderId[:8])
+	subject := fmt.Sprintf("[ORCHA] Don hang moi #%s - %s", order.OrderId[:8], order.UserName)
 
 	var itemsList string
 	for _, item := range order.Items {
-		itemsList += fmt.Sprintf("- %s x%d: %.0f VNĐ\n", item.ProductName, item.Quantity, item.Price*float64(item.Quantity))
+		itemsList += fmt.Sprintf("- %s\n  + So luong: %d\n  + Don gia: %.0f VND\n  + Thanh tien: %.0f VND\n",
+			item.ProductName, item.Quantity, item.Price, item.Price*float64(item.Quantity))
 	}
 
-	body := fmt.Sprintf(`Đơn hàng mới từ ORCHA!
+	orderURL := "(khong cau hinh FRONTEND_URL)"
+	if frontendURL != "" {
+		orderURL = strings.TrimRight(frontendURL, "/") + "/orders/" + order.OrderId
+	}
 
-Mã đơn: %s
-Khách hàng: %s (%s)
-Người nhận: %s - SĐT: %s
-Địa chỉ: %s
+	body := fmt.Sprintf(`ORCHA - THONG BAO DON HANG MOI
 
-Sản phẩm:
+Ma don: %s
+Trang thai ban dau: %s
+Phuong thuc thanh toan: %s
+
+Khach hang:
+- Ten: %s
+- Email: %s
+
+Thong tin giao hang:
+- Nguoi nhan: %s
+- SDT: %s
+- Dia chi: %s
+
+Chi tiet san pham:
 %s
-Tổng cộng: %.0f VNĐ
-Ghi chú: %s
+Tong cong: %.0f VND
+Ghi chu: %s
 
-Thời gian: %s
-`, order.OrderId, order.UserName, order.UserEmail,
+Thoi gian tao: %s
+Link chi tiet don: %s
+`, order.OrderId, order.Status, order.PaymentMethod,
+		order.UserName, order.UserEmail,
 		order.ShippingName, order.ShippingPhone, order.ShippingAddr,
-		itemsList, order.TotalAmount, order.Note, order.CreatedAt)
+		itemsList, order.TotalAmount, order.Note, order.CreatedAt, orderURL)
 
-	sesClient.SendEmail(context.TODO(), &ses.SendEmailInput{
+	_, err := sesClient.SendEmail(ctx, &ses.SendEmailInput{
 		Source: aws.String(adminEmail),
 		Destination: &sestypes.Destination{
 			ToAddresses: []string{adminEmail},
@@ -303,6 +323,17 @@ Thời gian: %s
 			},
 		},
 	})
+
+	return err
+}
+
+func normalizeLegacyOrder(order *models.Order) {
+	if order.PaymentMethod == "" {
+		order.PaymentMethod = models.PaymentCOD
+	}
+	if order.RefundStatus == "" {
+		order.RefundStatus = models.RefundNone
+	}
 }
 
 func getUserOrders(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -327,6 +358,9 @@ func getUserOrders(ctx context.Context, request events.APIGatewayProxyRequest) (
 
 	var orders []models.Order
 	attributevalue.UnmarshalListOfMaps(result.Items, &orders)
+	for i := range orders {
+		normalizeLegacyOrder(&orders[i])
+	}
 
 	return response.Success(200, orders), nil
 }
@@ -347,6 +381,7 @@ func getOrder(ctx context.Context, id string, request events.APIGatewayProxyRequ
 
 	var order models.Order
 	attributevalue.UnmarshalMap(result.Item, &order)
+	normalizeLegacyOrder(&order)
 
 	// Only allow owner or admin to view
 	if order.UserId != claims.Sub && !auth.IsAdmin(request) {
@@ -367,6 +402,9 @@ func getAllOrders(ctx context.Context) (events.APIGatewayProxyResponse, error) {
 
 	var orders []models.Order
 	attributevalue.UnmarshalListOfMaps(result.Items, &orders)
+	for i := range orders {
+		normalizeLegacyOrder(&orders[i])
+	}
 
 	return response.Success(200, orders), nil
 }

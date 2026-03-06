@@ -872,6 +872,60 @@
     cursor: not-allowed;
 }
 
+.btnSecondaryInline {
+    padding: 0.5rem;
+    border: 1px solid var(--admin-border);
+    background: #f8fafc;
+    color: #334155;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btnSecondaryInline:hover {
+    background: #e2e8f0;
+}
+
+.orderDetailCell {
+    background: #fafafa;
+    padding: 0 !important;
+}
+
+.orderDetailPanel {
+    border-top: 1px dashed var(--admin-border);
+    padding: 1rem 1.25rem;
+}
+
+.orderDetailGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+.orderDetailGrid h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.95rem;
+    color: var(--admin-text);
+}
+
+.orderDetailGrid p {
+    margin: 0.25rem 0;
+    color: var(--admin-text-light);
+    font-size: 0.85rem;
+}
+
+.orderDetailItem {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 0.75rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px dashed #e2e8f0;
+    font-size: 0.85rem;
+}
+
 /* Status & Badges */
 .badgePayOS {
     display: inline-block;
@@ -1265,5 +1319,13 @@
     .dataTable th,
     .dataTable td {
         padding: 0.75rem 0.5rem;
+    }
+
+    .orderDetailGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .orderDetailItem {
+        grid-template-columns: 1fr auto;
     }
 }
