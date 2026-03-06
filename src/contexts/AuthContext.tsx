@@ -19,6 +19,9 @@ interface UserInfo {
     name?: string;
     sub?: string;
     groups?: string[];
+    avatarUrl?: string;
+    phone?: string;
+    address?: string;
 }
 
 interface AuthContextType {

@@ -8,7 +8,9 @@ export interface Order {
     userName: string;
     items: OrderItem[];
     totalAmount: number;
-    status: 'PENDING' | 'CONFIRMED' | 'SHIPPING' | 'DELIVERED' | 'CANCELLED';
+    status: 'PENDING_PAYMENT' | 'PENDING' | 'CONFIRMED' | 'SHIPPING' | 'DELIVERED' | 'CANCELLED';
+    paymentMethod: 'COD' | 'PAYOS';
+    refundStatus?: 'NONE' | 'PENDING' | 'COMPLETED';
     shippingName: string;
     shippingPhone: string;
     shippingAddress: string;
@@ -32,6 +34,7 @@ export interface CreateOrderInput {
     shippingPhone: string;
     shippingAddress: string;
     note?: string;
+    paymentMethod: 'COD' | 'PAYOS';
 }
 
 /** Feedback / Review */
@@ -67,6 +70,20 @@ export const orderService = {
     },
 
     /** 
+     * Xác nhận thanh toán PayOS thành công
+     */
+    async confirmPayment(orderId: string): Promise<Order> {
+        return apiRequest<Order>(`/orders/${orderId}/confirm-payment`, 'POST');
+    },
+
+    /** 
+     * Hủy đơn hàng (payment failed hoặc user cancel)
+     */
+    async cancel(orderId: string): Promise<Order> {
+        return apiRequest<Order>(`/orders/${orderId}/cancel`, 'POST');
+    },
+
+    /** 
      * Gửi đánh giá cho 1 sản phẩm đã mua
      */
     async submitFeedback(input: CreateFeedbackInput): Promise<void> {
@@ -81,9 +98,9 @@ export const orderService = {
     },
 
     /** 
-     * ADMIN: Cập nhật trạng thái đơn hàng (CONFIRMED -> SHIPPING -> DELIVERED)
+     * ADMIN: Cập nhật trạng thái đơn hàng (tuần tự: PENDING -> CONFIRMED -> SHIPPING -> DELIVERED)
      */
-    async adminUpdateStatus(id: string, status: Order['status']): Promise<Order> {
-        return apiRequest<Order>(`/admin/orders/${id}`, 'PUT', { status });
+    async adminUpdateStatus(id: string, status: Order['status'], refundStatus?: Order['refundStatus']): Promise<Order> {
+        return apiRequest<Order>(`/admin/orders/${id}`, 'PUT', { status, refundStatus });
     }
 };

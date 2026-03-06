@@ -16,7 +16,7 @@ import styles from './AdminDashboard.module.css';
 type AdminTab = 'overview' | 'categories' | 'products' | 'orders' | 'users' | 'feedback';
 type OrderStatus = Order['status'];
 
-const ORDER_STATUSES: OrderStatus[] = ['PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED', 'CANCELLED'];
+const ORDER_STATUS_SEQUENCE: OrderStatus[] = ['PENDING_PAYMENT', 'PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED'];
 const PRODUCT_FORM_DRAFT_KEY = 'orcha_admin_product_form_draft_v2';
 
 interface ProductFormData {
@@ -193,6 +193,7 @@ export const AdminDashboard = () => {
     const [categoryForm, setCategoryForm] = useState<CategoryFormData>(initialCategoryForm);
 
     const [orderStatusDraft, setOrderStatusDraft] = useState<Record<string, OrderStatus>>({});
+    const [orderRefundDraft, setOrderRefundDraft] = useState<Record<string, Order['refundStatus']>>({});
     const [userDrafts, setUserDrafts] = useState<Record<string, { role: AdminUserRole; isActive: boolean }>>({});
 
     useEffect(() => {
@@ -506,18 +507,78 @@ export const AdminDashboard = () => {
     };
 
     const handleUpdateOrderStatus = async (orderId: string) => {
+        const order = orders.find(o => o.orderId === orderId);
+        if (!order) return;
+
         const newStatus = orderStatusDraft[orderId];
-        if (!newStatus) return;
+        const newRefund = orderRefundDraft[orderId];
+
+        if (!newStatus && !newRefund) return;
+
+        // Validate linear progression (no rollback)
+        if (newStatus && newStatus !== order.status) {
+            const currentIdx = ORDER_STATUS_SEQUENCE.indexOf(order.status);
+            const targetIdx = ORDER_STATUS_SEQUENCE.indexOf(newStatus);
+
+            if (targetIdx === -1) {
+                setError('Trạng thái không hợp lệ');
+                return;
+            }
+
+            if (targetIdx <= currentIdx) {
+                setError('Không thể quay lại trạng thái trước đó');
+                return;
+            }
+
+            if (targetIdx !== currentIdx + 1) {
+                setError('Chỉ có thể cập nhật sang trạng thái tiếp theo');
+                return;
+            }
+        }
 
         setBusyAction(true);
         setError('');
 
         try {
-            const updated = await orderService.adminUpdateStatus(orderId, newStatus);
+            const updated = await orderService.adminUpdateStatus(
+                orderId, 
+                newStatus || order.status, 
+                newRefund
+            );
             setOrders((prev) => prev.map((item) => (item.orderId === orderId ? updated : item)));
-            setSuccess(`Đã cập nhật trạng thái đơn hàng ${orderId}`);
+            setSuccess(`Đã cập nhật đơn hàng ${orderId.slice(0, 8)}`);
+            
+            // Clear drafts
+            const newOrderDrafts = { ...orderStatusDraft };
+            delete newOrderDrafts[orderId];
+            setOrderStatusDraft(newOrderDrafts);
+            
+            const newRefundDrafts = { ...orderRefundDraft };
+            delete newRefundDrafts[orderId];
+            setOrderRefundDraft(newRefundDrafts);
         } catch (updateError) {
             const message = updateError instanceof Error ? updateError.message : 'Cập nhật thất bại';
+            setError(message);
+        } finally {
+            setBusyAction(false);
+        }
+    };
+
+    const handleCancelOrder = async (orderId: string) => {
+        const order = orders.find(o => o.orderId === orderId);
+        if (!order) return;
+
+        if (!confirm(`Bạn có chắc chắn muốn hủy đơn hàng ${orderId.slice(0, 8)}?`)) return;
+
+        setBusyAction(true);
+        setError('');
+
+        try {
+            const updated = await orderService.adminUpdateStatus(orderId, 'CANCELLED');
+            setOrders((prev) => prev.map((item) => (item.orderId === orderId ? updated : item)));
+            setSuccess(`Đã hủy đơn hàng ${orderId.slice(0, 8)}`);
+        } catch (updateError) {
+            const message = updateError instanceof Error ? updateError.message : 'Hủy đơn thất bại';
             setError(message);
         } finally {
             setBusyAction(false);
@@ -1371,71 +1432,160 @@ export const AdminDashboard = () => {
         );
     };
 
-    const renderOrders = () => (
-        <div className={styles.contentSection}>
-            <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>Quản lý đơn hàng ({orders.length})</h2>
-            </div>
+    const renderOrders = () => {
+        const getNextStatus = (currentStatus: OrderStatus): OrderStatus | null => {
+            const currentIdx = ORDER_STATUS_SEQUENCE.indexOf(currentStatus);
+            if (currentIdx === -1 || currentIdx === ORDER_STATUS_SEQUENCE.length - 1) return null;
+            return ORDER_STATUS_SEQUENCE[currentIdx + 1];
+        };
 
-            <div className={styles.tableContainer}>
-                <table className={styles.dataTable}>
-                    <thead>
-                        <tr>
-                            <th>Mã đơn</th>
-                            <th>Khách hàng</th>
-                            <th>Tổng tiền</th>
-                            <th>Trạng thái</th>
-                            <th>Ngày tạo</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {orders.map((order) => (
-                            <tr key={order.orderId}>
-                                <td>
-                                    <strong>{order.orderId.slice(0, 8)}</strong>
-                                </td>
-                                <td>
-                                    <div>{order.userId || 'N/A'}</div>
-                                    <div className={styles.subText}>{order.orderId.slice(0, 8)}</div>
-                                </td>
-                                <td>{formatCurrency(order.totalAmount)}</td>
-                                <td>
-                                    <select
-                                        className={styles.statusSelect}
-                                        value={orderStatusDraft[order.orderId] || order.status}
-                                        onChange={(e) =>
-                                            setOrderStatusDraft({
-                                                ...orderStatusDraft,
-                                                [order.orderId]: e.target.value as OrderStatus,
-                                            })
-                                        }
-                                    >
-                                        {ORDER_STATUSES.map((status) => (
-                                            <option key={status} value={status}>
-                                                {status}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </td>
-                                <td>{formatDateTime(order.createdAt)}</td>
-                                <td>
-                                    {orderStatusDraft[order.orderId] !== order.status && (
-                                        <button
-                                            className={styles.btnSave}
-                                            onClick={() => handleUpdateOrderStatus(order.orderId)}
-                                        >
-                                            <FiSave size={16} />
-                                        </button>
-                                    )}
-                                </td>
+        const getStatusLabel = (status: OrderStatus): string => {
+            const labels: Record<OrderStatus, string> = {
+                'PENDING_PAYMENT': 'Chờ thanh toán',
+                'PENDING': 'Chờ xác nhận',
+                'CONFIRMED': 'Đã xác nhận',
+                'SHIPPING': 'Đang vận chuyển',
+                'DELIVERED': 'Đã giao',
+                'CANCELLED': 'Đã hủy',
+            };
+            return labels[status] || status;
+        };
+
+        const getRefundLabel = (status?: Order['refundStatus']): string => {
+            if (!status || status === 'NONE') return 'Không cần';
+            if (status === 'PENDING') return 'Chưa hoàn tiền';
+            if (status === 'COMPLETED') return 'Đã hoàn tiền';
+            return status;
+        };
+
+        return (
+            <div className={styles.contentSection}>
+                <div className={styles.sectionHeader}>
+                    <h2 className={styles.sectionTitle}>Quản lý đơn hàng ({orders.length})</h2>
+                </div>
+
+                <div className={styles.tableContainer}>
+                    <table className={styles.dataTable}>
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th>Tổng tiền</th>
+                                <th>PT Thanh toán</th>
+                                <th>Trạng thái</th>
+                                <th>Hoàn tiền</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {orders.map((order) => {
+                                const nextStatus = getNextStatus(order.status);
+                                const canUpdateStatus = nextStatus && order.status !== 'CANCELLED' && order.status !== 'DELIVERED';
+                                const canCancel = order.status !== 'CANCELLED' && order.status !== 'DELIVERED';
+                                const needsRefund = order.paymentMethod === 'PAYOS' && order.status === 'CANCELLED' && order.refundStatus !== 'COMPLETED';
+                                const hasChanges = (orderStatusDraft[order.orderId] && orderStatusDraft[order.orderId] !== order.status) ||
+                                    (orderRefundDraft[order.orderId] && orderRefundDraft[order.orderId] !== order.refundStatus);
+
+                                return (
+                                    <tr key={order.orderId}>
+                                        <td>
+                                            <strong>{order.orderId.slice(0, 8)}</strong>
+                                        </td>
+                                        <td>
+                                            <div><strong>{order.userName || 'N/A'}</strong></div>
+                                            <div className={styles.subText}>{order.userEmail}</div>
+                                        </td>
+                                        <td>{formatCurrency(order.totalAmount)}</td>
+                                        <td>
+                                            <span className={order.paymentMethod === 'PAYOS' ? styles.badgePayOS : styles.badgeCOD}>
+                                                {order.paymentMethod}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' }}>
+                                                <span className={styles[`status${order.status}`]}>
+                                                    {getStatusLabel(order.status)}
+                                                </span>
+                                                {canUpdateStatus && (
+                                                    <select
+                                                        className={styles.statusSelect}
+                                                        value={orderStatusDraft[order.orderId] || order.status}
+                                                        onChange={(e) =>
+                                                            setOrderStatusDraft({
+                                                                ...orderStatusDraft,
+                                                                [order.orderId]: e.target.value as OrderStatus,
+                                                            })
+                                                        }
+                                                        disabled={busyAction}
+                                                    >
+                                                        <option value={order.status}>-- Chọn --</option>
+                                                        <option value={nextStatus}>{getStatusLabel(nextStatus)}</option>
+                                                    </select>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {order.refundStatus && order.refundStatus !== 'NONE' ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' }}>
+                                                    <span className={order.refundStatus === 'COMPLETED' ? styles.badgeSuccess : styles.badgeWarning}>
+                                                        {getRefundLabel(order.refundStatus)}
+                                                    </span>
+                                                    {needsRefund && (
+                                                        <select
+                                                            className={styles.statusSelect}
+                                                            value={orderRefundDraft[order.orderId] || order.refundStatus}
+                                                            onChange={(e) =>
+                                                                setOrderRefundDraft({
+                                                                    ...orderRefundDraft,
+                                                                    [order.orderId]: e.target.value as Order['refundStatus'],
+                                                                })
+                                                            }
+                                                            disabled={busyAction}
+                                                        >
+                                                            <option value={order.refundStatus}>-- Chọn --</option>
+                                                            <option value="COMPLETED">Đã hoàn tiền</option>
+                                                        </select>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className={styles.subText}>--</span>
+                                            )}
+                                        </td>
+                                        <td>{formatDateTime(order.createdAt)}</td>
+                                        <td>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                {hasChanges && (
+                                                    <button
+                                                        className={styles.btnSave}
+                                                        onClick={() => handleUpdateOrderStatus(order.orderId)}
+                                                        disabled={busyAction}
+                                                        title="Lưu thay đổi"
+                                                    >
+                                                        <FiSave size={16} />
+                                                    </button>
+                                                )}
+                                                {canCancel && (
+                                                    <button
+                                                        className={styles.btnDanger}
+                                                        onClick={() => handleCancelOrder(order.orderId)}
+                                                        disabled={busyAction}
+                                                        title="Hủy đơn hàng"
+                                                    >
+                                                        <FiTrash2 size={16} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     const renderUsers = () => (
         <div className={styles.contentSection}>

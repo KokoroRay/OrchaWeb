@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiAlertCircle, FiPackage } from 'react-icons/fi';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { FiArrowLeft, FiAlertCircle, FiPackage, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { orderService, type Order } from '../../services/orderService';
 import styles from './OrderDetailPage.module.css';
 
 const orderStatusLabels: Record<string, { vi: string; en: string; color: string }> = {
+    PENDING_PAYMENT: { vi: 'Chờ thanh toán', en: 'Pending Payment', color: '#ff6b6b' },
     PENDING: { vi: 'Chờ xác nhận', en: 'Pending', color: '#ff9800' },
     CONFIRMED: { vi: 'Đã xác nhận', en: 'Confirmed', color: '#2196f3' },
     SHIPPING: { vi: 'Đang vận chuyển', en: 'Shipping', color: '#9c27b0' },
@@ -18,6 +19,7 @@ const orderStatusSteps = ['PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED'];
 
 export const OrderDetailPage = () => {
     const { orderId } = useParams<{ orderId: string }>();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { isAuthenticated, isLoading } = useAuthContext();
     const { language } = useLanguage();
     const isVi = language === 'vi';
@@ -26,13 +28,62 @@ export const OrderDetailPage = () => {
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [paymentStatus, setPaymentStatus] = useState<'success' | 'cancelled' | null>(null);
+    const [paymentMessage, setPaymentMessage] = useState('');
+    const [verifyingPayment, setVerifyingPayment] = useState(false);
 
-    // Kiểm tra authentication
+    // Check for payment callback parameters
     useEffect(() => {
-        if (!isLoading && !isAuthenticated) {
+        const payment = searchParams.get('payment');
+        if (payment === 'success') {
+            setPaymentStatus('success');
+            setPaymentMessage(isVi ? 'Thanh toán thành công!' : 'Payment successful!');
+            // Confirm payment with backend
+            if (orderId) {
+                setVerifyingPayment(true);
+                orderService.confirmPayment(orderId)
+                    .then(() => {
+                        // Payment confirmed successfully
+                        setPaymentMessage(isVi ? 'Thanh toán thành công! Đơn hàng đang được xử lý.' : 'Payment successful! Order is being processed.');
+                    })
+                    .catch(() => {
+                        setPaymentStatus('cancelled');
+                        setPaymentMessage(isVi ? 'Xác nhận thanh toán thất bại' : 'Payment confirmation failed');
+                    })
+                    .finally(() => {
+                        setVerifyingPayment(false);
+                    });
+            }
+        } else if (payment === 'cancelled') {
+            setPaymentStatus('cancelled');
+            setPaymentMessage(isVi ? 'Thanh toán đã bị hủy' : 'Payment was cancelled');
+            // Cancel order on backend
+            if (orderId) {
+                orderService.cancel(orderId)
+                    .catch(() => {
+                        // Ignore cancel errors, order might already be cancelled
+                    });
+            }
+        }
+
+        // Clean up payment parameters from URL after reading
+        if (payment) {
+            searchParams.delete('payment');
+            searchParams.delete('code');
+            searchParams.delete('id');
+            searchParams.delete('cancel');
+            searchParams.delete('status');
+            searchParams.delete('orderCode');
+            setSearchParams(searchParams, { replace: true });
+        }
+    }, [searchParams, setSearchParams, orderId, isVi]);
+
+    // Kiểm tra authentication - skip redirect if payment callback
+    useEffect(() => {
+        if (!isLoading && !isAuthenticated && !paymentStatus) {
             navigate('/auth');
         }
-    }, [isAuthenticated, isLoading, navigate]);
+    }, [isAuthenticated, isLoading, navigate, paymentStatus]);
 
     // Load order detail
     useEffect(() => {
@@ -45,7 +96,15 @@ export const OrderDetailPage = () => {
                 const data = await orderService.getById(orderId);
                 setOrder(data);
             } catch (err) {
-                const message = err instanceof Error ? err.message : (isVi ? 'Lỗi khi tải chi tiết đơn hàng' : 'Error loading order details');
+                let message = err instanceof Error ? err.message : (isVi ? 'Lỗi khi tải chi tiết đơn hàng' : 'Error loading order details');
+                
+                // If user is not authenticated and API fails, suggest login
+                if (!isAuthenticated && paymentStatus) {
+                    message = isVi 
+                        ? 'Vui lòng đăng nhập để xem chi tiết đơn hàng của bạn' 
+                        : 'Please log in to view your order details';
+                }
+                
                 setError(message);
                 setOrder(null);
             } finally {
@@ -53,12 +112,13 @@ export const OrderDetailPage = () => {
             }
         };
 
-        if (isAuthenticated && orderId) {
+        // Load order if authenticated OR if payment callback (allow viewing result)
+        if (orderId && (isAuthenticated || paymentStatus)) {
             loadOrder();
         }
-    }, [isAuthenticated, orderId, isVi]);
+    }, [isAuthenticated, orderId, isVi, paymentStatus]);
 
-    if (!isAuthenticated && !isLoading) {
+    if (!isAuthenticated && !isLoading && !paymentStatus) {
         return (
             <div className={styles.container}>
                 <div className={styles.emptyState}>
@@ -88,6 +148,28 @@ export const OrderDetailPage = () => {
                         <FiArrowLeft /> {isVi ? 'Quay lại lịch sử' : 'Back to orders'}
                     </button>
                 </div>
+                
+                {/* Payment Status Banner even if order not found */}
+                {paymentStatus && (
+                    <div className={`${styles.paymentBanner} ${paymentStatus === 'success' ? styles.paymentSuccess : styles.paymentCancelled}`}>
+                        {paymentStatus === 'success' ? (
+                            <FiCheckCircle size={24} />
+                        ) : (
+                            <FiXCircle size={24} />
+                        )}
+                        <div className={styles.paymentBannerContent}>
+                            <h3>{paymentMessage}</h3>
+                            {paymentStatus === 'success' && (
+                                <p>
+                                    {isVi 
+                                        ? 'Cảm ơn bạn đã đặt hàng! Vui lòng đăng nhập để xem chi tiết đơn hàng.' 
+                                        : 'Thank you for your order! Please log in to view order details.'}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+                
                 {error && (
                     <div className={styles.errorMessage}>
                         <FiAlertCircle size={16} />
@@ -97,6 +179,11 @@ export const OrderDetailPage = () => {
                 <div className={styles.emptyState}>
                     <FiPackage className={styles.emptyIcon} />
                     <h2>{isVi ? 'Không tìm thấy đơn hàng' : 'Order not found'}</h2>
+                    {!isAuthenticated && paymentStatus && (
+                        <button onClick={() => navigate('/auth')} className={styles.primaryBtn}>
+                            {isVi ? 'Đăng nhập để xem đơn hàng' : 'Log in to view order'}
+                        </button>
+                    )}
                 </div>
             </div>
         );
@@ -117,6 +204,39 @@ export const OrderDetailPage = () => {
                 </button>
                 <h1>{isVi ? 'Chi tiết đơn hàng' : 'Order Details'}</h1>
             </div>
+
+            {/* Payment Status Banner */}
+            {paymentStatus && (
+                <div className={`${styles.paymentBanner} ${paymentStatus === 'success' ? styles.paymentSuccess : styles.paymentCancelled}`}>
+                    {paymentStatus === 'success' ? (
+                        <FiCheckCircle size={24} />
+                    ) : (
+                        <FiXCircle size={24} />
+                    )}
+                    <div className={styles.paymentBannerContent}>
+                        <h3>{paymentMessage}</h3>
+                        {verifyingPayment && (
+                            <p className={styles.verifyingText}>
+                                {isVi ? 'Đang xác minh thanh toán...' : 'Verifying payment...'}
+                            </p>
+                        )}
+                        {paymentStatus === 'success' && !verifyingPayment && (
+                            <p>
+                                {isVi 
+                                    ? 'Cảm ơn bạn đã đặt hàng! Đơn hàng của bạn đang được xử lý.' 
+                                    : 'Thank you for your order! Your order is being processed.'}
+                            </p>
+                        )}
+                        {paymentStatus === 'cancelled' && (
+                            <p>
+                                {isVi 
+                                    ? 'Bạn có thể thử lại thanh toán hoặc liên hệ với chúng tôi để được hỗ trợ.' 
+                                    : 'You can try again or contact us for assistance.'}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            )}
 
             <div className={styles.content}>
                 {/* Status section */}

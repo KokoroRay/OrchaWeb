@@ -15,6 +15,7 @@ type User struct {
 	Name      string   `json:"name" dynamodbav:"name"`
 	Phone     string   `json:"phone,omitempty" dynamodbav:"phone,omitempty"`
 	Address   string   `json:"address,omitempty" dynamodbav:"address,omitempty"`
+	AvatarUrl string   `json:"avatarUrl,omitempty" dynamodbav:"avatarUrl,omitempty"`
 	Role      UserRole `json:"role" dynamodbav:"role"`
 	IsActive  bool     `json:"isActive" dynamodbav:"isActive"`
 	CreatedAt string   `json:"createdAt" dynamodbav:"createdAt"`
@@ -22,9 +23,10 @@ type User struct {
 }
 
 type UpdateProfileInput struct {
-	Name    string `json:"name"`
-	Phone   string `json:"phone,omitempty"`
-	Address string `json:"address,omitempty"`
+	Name      string `json:"name"`
+	Phone     string `json:"phone,omitempty"`
+	Address   string `json:"address,omitempty"`
+	AvatarUrl string `json:"avatarUrl,omitempty"`
 }
 
 type AdminUpdateUserInput struct {

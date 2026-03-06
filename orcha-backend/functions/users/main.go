@@ -116,23 +116,43 @@ func updateProfile(ctx context.Context, request events.APIGatewayProxyRequest) (
 
 	now := time.Now().UTC().Format(time.RFC3339)
 
+	// Build update expression dynamically
+	updateExpr := "SET updatedAt = :updated"
+	exprValues := map[string]types.AttributeValue{
+		":updated": &types.AttributeValueMemberS{Value: now},
+	}
+	exprNames := map[string]string{
+		"#name": "name",
+	}
+
+	// Always update name
+	updateExpr += ", #name = :name"
+	exprValues[":name"] = &types.AttributeValueMemberS{Value: input.Name}
+
+	// Optional fields
+	if input.Phone != "" {
+		updateExpr += ", phone = :phone"
+		exprValues[":phone"] = &types.AttributeValueMemberS{Value: input.Phone}
+	}
+	if input.Address != "" {
+		updateExpr += ", address = :addr"
+		exprValues[":addr"] = &types.AttributeValueMemberS{Value: input.Address}
+	}
+	if input.AvatarUrl != "" {
+		updateExpr += ", avatarUrl = :avatar"
+		exprValues[":avatar"] = &types.AttributeValueMemberS{Value: input.AvatarUrl}
+	}
+
 	client := db.GetClient()
 	result, err := client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		TableName: aws.String(tableName),
+		TableName:                 aws.String(tableName),
 		Key: map[string]types.AttributeValue{
 			"userId": &types.AttributeValueMemberS{Value: claims.Sub},
 		},
-		UpdateExpression: aws.String("SET #name = :name, phone = :phone, address = :addr, updatedAt = :updated"),
-		ExpressionAttributeNames: map[string]string{
-			"#name": "name",
-		},
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":name":    &types.AttributeValueMemberS{Value: input.Name},
-			":phone":   &types.AttributeValueMemberS{Value: input.Phone},
-			":addr":    &types.AttributeValueMemberS{Value: input.Address},
-			":updated": &types.AttributeValueMemberS{Value: now},
-		},
-		ReturnValues: types.ReturnValueAllNew,
+		UpdateExpression:          aws.String(updateExpr),
+		ExpressionAttributeNames:  exprNames,
+		ExpressionAttributeValues: exprValues,
+		ReturnValues:              types.ReturnValueAllNew,
 	})
 	if err != nil {
 		return response.Error(500, "Lỗi khi cập nhật thông tin"), nil

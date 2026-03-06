@@ -63,9 +63,19 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return getUserOrders(ctx, request)
 
 	// GET /orders/{id}
-	case method == "GET" && strings.HasPrefix(path, "/orders/") && !strings.Contains(path, "admin"):
+	case method == "GET" && strings.HasPrefix(path, "/orders/") && !strings.Contains(path, "admin") && !strings.Contains(path, "confirm") && !strings.Contains(path, "cancel"):
 		id := request.PathParameters["id"]
 		return getOrder(ctx, id, request)
+
+	// POST /orders/{id}/confirm-payment - Confirm PayOS payment
+	case method == "POST" && strings.HasPrefix(path, "/orders/") && strings.HasSuffix(path, "/confirm-payment"):
+		id := request.PathParameters["id"]
+		return confirmPayment(ctx, id, request)
+
+	// POST /orders/{id}/cancel - Cancel order (user or payment failure)
+	case method == "POST" && strings.HasPrefix(path, "/orders/") && strings.HasSuffix(path, "/cancel"):
+		id := request.PathParameters["id"]
+		return cancelOrder(ctx, id, request)
 
 	// GET /admin/orders
 	case method == "GET" && path == "/admin/orders":
@@ -100,6 +110,14 @@ func createOrder(ctx context.Context, request events.APIGatewayProxyRequest) (ev
 
 	if input.ShippingName == "" || input.ShippingPhone == "" || input.ShippingAddr == "" {
 		return response.Error(400, "Thiếu thông tin giao hàng"), nil
+	}
+
+	// Validate payment method
+	if input.PaymentMethod == "" {
+		input.PaymentMethod = models.PaymentCOD // Default to COD
+	}
+	if input.PaymentMethod != models.PaymentCOD && input.PaymentMethod != models.PaymentPayOS {
+		return response.Error(400, "Phương thức thanh toán không hợp lệ"), nil
 	}
 
 	client := db.GetClient()
@@ -177,6 +195,7 @@ func createOrder(ctx context.Context, request events.APIGatewayProxyRequest) (ev
 		UserName:      claims.Name,
 		Items:         orderItems,
 		TotalAmount:   totalAmount,
+		PaymentMethod: input.PaymentMethod,
 		ShippingName:  input.ShippingName,
 		ShippingPhone: input.ShippingPhone,
 		ShippingAddr:  input.ShippingAddr,
@@ -358,9 +377,131 @@ func updateOrderStatus(ctx context.Context, id string, request events.APIGateway
 		return response.Error(400, "Dữ liệu không hợp lệ"), nil
 	}
 
+	client := db.GetClient()
+
+	// Get current order to validate status progression
+	getResult, err := client.GetItem(ctx, &dynamodb.GetItemInput{
+		TableName: aws.String(ordersTable),
+		Key: map[string]types.AttributeValue{
+			"orderId": &types.AttributeValueMemberS{Value: id},
+		},
+	})
+	if err != nil || getResult.Item == nil {
+		return response.Error(404, "Không tìm thấy đơn hàng"), nil
+	}
+
+	var currentOrder models.Order
+	attributevalue.UnmarshalMap(getResult.Item, &currentOrder)
+
+	// Validate linear status progression (cannot go backwards)
+	statusOrder := []models.OrderStatus{
+		models.OrderPendingPayment,
+		models.OrderPending,
+		models.OrderConfirmed,
+		models.OrderShipping,
+		models.OrderDelivered,
+	}
+
+	// Find current and target status indices
+	currentIdx := -1
+	targetIdx := -1
+	for i, status := range statusOrder {
+		if status == currentOrder.Status {
+			currentIdx = i
+		}
+		if status == input.Status {
+			targetIdx = i
+		}
+	}
+
+	// Allow CANCELLED from any status except DELIVERED
+	if input.Status == models.OrderCancelled {
+		if currentOrder.Status == models.OrderDelivered {
+			return response.Error(400, "Không thể hủy đơn hàng đã giao"), nil
+		}
+	} else {
+		// Validate linear progression
+		if currentIdx == -1 || targetIdx == -1 {
+			return response.Error(400, "Trạng thái không hợp lệ"), nil
+		}
+		if targetIdx <= currentIdx {
+			return response.Error(400, "Không thể quay lại trạng thái trước đó"), nil
+		}
+		if targetIdx != currentIdx+1 {
+			return response.Error(400, "Chỉ có thể cập nhật sang trạng thái tiếp theo"), nil
+		}
+	}
+
 	now := time.Now().UTC().Format(time.RFC3339)
 
+	// Build update expression
+	updateExpr := "SET #status = :status, updatedAt = :updated"
+	exprAttrNames := map[string]string{
+		"#status": "status",
+	}
+	exprAttrValues := map[string]types.AttributeValue{
+		":status":  &types.AttributeValueMemberS{Value: string(input.Status)},
+		":updated": &types.AttributeValueMemberS{Value: now},
+	}
+
+	// Update refund status if provided
+	if input.RefundStatus != "" {
+		updateExpr += ", refundStatus = :refund"
+		exprAttrValues[":refund"] = &types.AttributeValueMemberS{Value: string(input.RefundStatus)}
+	}
+
+	result, err := client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName:                 aws.String(ordersTable),
+		Key: map[string]types.AttributeValue{
+			"orderId": &types.AttributeValueMemberS{Value: id},
+		},
+		UpdateExpression:          aws.String(updateExpr),
+		ExpressionAttributeNames:  exprAttrNames,
+		ExpressionAttributeValues: exprAttrValues,
+		ReturnValues:              types.ReturnValueAllNew,
+	})
+	if err != nil {
+		return response.Error(500, "Lỗi khi cập nhật đơn hàng"), nil
+	}
+
+	var order models.Order
+	attributevalue.UnmarshalMap(result.Attributes, &order)
+
+	return response.Success(200, order), nil
+}
+
+func confirmPayment(ctx context.Context, id string, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	claims := auth.ExtractClaims(request)
+
 	client := db.GetClient()
+
+	// Get order
+	getResult, err := client.GetItem(ctx, &dynamodb.GetItemInput{
+		TableName: aws.String(ordersTable),
+		Key: map[string]types.AttributeValue{
+			"orderId": &types.AttributeValueMemberS{Value: id},
+		},
+	})
+	if err != nil || getResult.Item == nil {
+		return response.Error(404, "Không tìm thấy đơn hàng"), nil
+	}
+
+	var order models.Order
+	attributevalue.UnmarshalMap(getResult.Item, &order)
+
+	// Only allow owner or admin
+	if order.UserId != claims.Sub && !auth.IsAdmin(request) {
+		return response.Error(403, "Không có quyền"), nil
+	}
+
+	// Can only confirm if status is PENDING_PAYMENT
+	if order.Status != models.OrderPendingPayment {
+		return response.Error(400, "Đơn hàng không trong trạng thái chờ thanh toán"), nil
+	}
+
+	now := time.Now().UTC().Format(time.RFC3339)
+
+	// Update status to PENDING
 	result, err := client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		TableName: aws.String(ordersTable),
 		Key: map[string]types.AttributeValue{
@@ -371,16 +512,79 @@ func updateOrderStatus(ctx context.Context, id string, request events.APIGateway
 			"#status": "status",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":status":  &types.AttributeValueMemberS{Value: string(input.Status)},
+			":status":  &types.AttributeValueMemberS{Value: string(models.OrderPending)},
 			":updated": &types.AttributeValueMemberS{Value: now},
 		},
 		ReturnValues: types.ReturnValueAllNew,
 	})
 	if err != nil {
-		return response.Error(500, "Lỗi khi cập nhật đơn hàng"), nil
+		return response.Error(500, "Lỗi khi xác nhận thanh toán"), nil
+	}
+
+	attributevalue.UnmarshalMap(result.Attributes, &order)
+
+	return response.Success(200, order), nil
+}
+
+func cancelOrder(ctx context.Context, id string, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	claims := auth.ExtractClaims(request)
+
+	client := db.GetClient()
+
+	// Get order
+	getResult, err := client.GetItem(ctx, &dynamodb.GetItemInput{
+		TableName: aws.String(ordersTable),
+		Key: map[string]types.AttributeValue{
+			"orderId": &types.AttributeValueMemberS{Value: id},
+		},
+	})
+	if err != nil || getResult.Item == nil {
+		return response.Error(404, "Không tìm thấy đơn hàng"), nil
 	}
 
 	var order models.Order
+	attributevalue.UnmarshalMap(getResult.Item, &order)
+
+	// Only allow owner or admin
+	if order.UserId != claims.Sub && !auth.IsAdmin(request) {
+		return response.Error(403, "Không có quyền"), nil
+	}
+
+	// Cannot cancel delivered orders
+	if order.Status == models.OrderDelivered {
+		return response.Error(400, "Không thể hủy đơn hàng đã giao"), nil
+	}
+
+	now := time.Now().UTC().Format(time.RFC3339)
+
+	// Set refund status based on payment method and current status
+	refundStatus := models.RefundNone
+	if order.PaymentMethod == models.PaymentPayOS && order.Status != models.OrderPendingPayment {
+		// PayOS order that was paid needs refund
+		refundStatus = models.RefundPending
+	}
+
+	// Update status to CANCELLED
+	result, err := client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String(ordersTable),
+		Key: map[string]types.AttributeValue{
+			"orderId": &types.AttributeValueMemberS{Value: id},
+		},
+		UpdateExpression: aws.String("SET #status = :status, refundStatus = :refund, updatedAt = :updated"),
+		ExpressionAttributeNames: map[string]string{
+			"#status": "status",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":status":  &types.AttributeValueMemberS{Value: string(models.OrderCancelled)},
+			":refund":  &types.AttributeValueMemberS{Value: string(refundStatus)},
+			":updated": &types.AttributeValueMemberS{Value: now},
+		},
+		ReturnValues: types.ReturnValueAllNew,
+	})
+	if err != nil {
+		return response.Error(500, "Lỗi khi hủy đơn hàng"), nil
+	}
+
 	attributevalue.UnmarshalMap(result.Attributes, &order)
 
 	return response.Success(200, order), nil

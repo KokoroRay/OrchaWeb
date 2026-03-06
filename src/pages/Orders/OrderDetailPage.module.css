@@ -64,6 +64,66 @@
   }
 }
 
+/* Payment Banner */
+.paymentBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  animation: slideDown 0.4s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.paymentSuccess {
+  background: linear-gradient(135deg, #d4edda 0%, #e8f5e9 100%);
+  border: 2px solid #28a745;
+  color: #155724;
+}
+
+.paymentCancelled {
+  background: linear-gradient(135deg, #f8d7da 0%, #ffebee 100%);
+  border: 2px solid #dc3545;
+  color: #721c24;
+}
+
+.paymentBanner svg {
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.paymentSuccess svg {
+  color: #28a745;
+}
+
+.paymentCancelled svg {
+  color: #dc3545;
+}
+
+.paymentBannerContent {
+  flex: 1;
+}
+
+.paymentBannerContent h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.paymentBannerContent p {
+  margin: 0;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
+.verifyingText {
+  font-size: 0.9rem;
+  font-style: italic;
+  opacity: 0.7 !important;
+}
+
 /* Empty state */
 .emptyState {
   text-align: center;

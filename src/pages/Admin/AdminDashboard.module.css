@@ -849,6 +849,132 @@
     color: white;
 }
 
+.btnDanger {
+    padding: 0.5rem;
+    background: #fee2e2;
+    color: #991b1b;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btnDanger:hover {
+    background: var(--admin-danger);
+    color: white;
+}
+
+.btnDanger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Status & Badges */
+.badgePayOS {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badgeCOD {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #e2e8f0;
+    color: #475569;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badgeSuccess {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badgeWarning {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.statusPENDING_PAYMENT {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #fee2e2;
+    color: #991b1b;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.statusPENDING {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #fed7aa;
+    color: #9a3412;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.statusCONFIRMED {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #bfdbfe;
+    color: #1e40af;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.statusSHIPPING {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #e9d5ff;
+    color: #6b21a8;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.statusDELIVERED {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.statusCANCELLED {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #e5e7eb;
+    color: #374151;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
 /* ============================================================
    DATA TABLE
    ============================================================ */

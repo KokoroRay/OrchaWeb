@@ -101,6 +101,7 @@ export const CheckoutPage = () => {
                 shippingPhone: formData.shippingPhone.trim(),
                 shippingAddress: formData.shippingAddress.trim(),
                 note: formData.note.trim(),
+                paymentMethod: selectedPayment,
             };
 
             const order = await orderService.create(orderInput);

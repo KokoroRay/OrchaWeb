@@ -1,13 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiAlertCircle, FiPackage, FiMail, FiUser, FiLogOut } from 'react-icons/fi';
+import { FiArrowLeft, FiAlertCircle, FiPackage, FiMail, FiUser, FiLogOut, FiCamera } from 'react-icons/fi';
 import { MdVerified } from 'react-icons/md';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { orderService, type Order } from '../../services/orderService';
+import { userService } from '../../services/userService';
+import { uploadImage, type UploadProgress } from '../../services/imageService';
 import styles from './ProfilePage.module.css';
 
 const orderStatusLabels: Record<string, { vi: string; en: string; color: string }> = {
+    PENDING_PAYMENT: { vi: 'Chờ thanh toán', en: 'Pending Payment', color: '#ff6b6b' },
     PENDING: { vi: 'Chờ xác nhận', en: 'Pending', color: '#ff9800' },
     CONFIRMED: { vi: 'Đã xác nhận', en: 'Confirmed', color: '#2196f3' },
     SHIPPING: { vi: 'Đang vận chuyển', en: 'Shipping', color: '#9c27b0' },
@@ -25,6 +28,10 @@ export const ProfilePage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [selectedTab, setSelectedTab] = useState<'profile' | 'orders'>('profile');
+    const [avatarUrl, setAvatarUrl] = useState<string>(user?.avatarUrl || '');
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState<number>(0);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Check authentication
     useEffect(() => {
@@ -59,6 +66,47 @@ export const ProfilePage = () => {
         logout();
         navigate('/');
     }, [logout, navigate]);
+
+    const handleAvatarClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setError('');
+            setUploadingAvatar(true);
+            setUploadProgress(0);
+
+            // Upload to Cloudinary
+            const result = await uploadImage(file, (progress: UploadProgress) => {
+                setUploadProgress(progress.percentage);
+            });
+
+            // Update profile with new avatar URL
+            await userService.updateProfile({
+                name: user?.name || 'User',
+                phone: user?.phone,
+                address: user?.address,
+                avatarUrl: result.secureUrl,
+            });
+
+            setAvatarUrl(result.secureUrl);
+
+            // Reload page to update auth context
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : (isVi ? 'Lỗi khi tải ảnh đại diện' : 'Error uploading avatar');
+            setError(message);
+        } finally {
+            setUploadingAvatar(false);
+            setUploadProgress(0);
+        }
+    };
 
     const handleViewOrder = (orderId: string) => {
         navigate(`/orders/${orderId}`);
@@ -115,9 +163,37 @@ export const ProfilePage = () => {
                 <aside className={styles.sidebar}>
                     <div className={styles.profileCard}>
                         <div className={styles.avatarSection}>
-                            <div className={styles.avatar}>
-                                {user?.name?.charAt(0).toUpperCase() || 'U'}
+                            <div 
+                                className={styles.avatar} 
+                                onClick={handleAvatarClick}
+                                style={{
+                                    backgroundImage: avatarUrl || user?.avatarUrl ? `url(${avatarUrl || user?.avatarUrl})` : 'none',
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                {!avatarUrl && !user?.avatarUrl && (user?.name?.charAt(0).toUpperCase() || 'U')}
+                                {uploadingAvatar && (
+                                    <div className={styles.uploadOverlay}>
+                                        <div className={styles.uploadProgress}>
+                                            {uploadProgress}%
+                                        </div>
+                                    </div>
+                                )}
+                                <div className={styles.avatarHover}>
+                                    <FiCamera size={24} />
+                                    <span>{isVi ? 'Đổi ảnh' : 'Change'}</span>
+                                </div>
                             </div>
+                            <input 
+                                ref={fileInputRef}
+                                type="file" 
+                                accept="image/*" 
+                                style={{ display: 'none' }}
+                                onChange={handleAvatarChange}
+                                disabled={uploadingAvatar}
+                            />
                             <div className={styles.verifyBadge}>
                                 <MdVerified />
                             </div>
