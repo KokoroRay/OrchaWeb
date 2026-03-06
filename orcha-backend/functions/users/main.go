@@ -145,7 +145,7 @@ func updateProfile(ctx context.Context, request events.APIGatewayProxyRequest) (
 
 	client := db.GetClient()
 	result, err := client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		TableName:                 aws.String(tableName),
+		TableName: aws.String(tableName),
 		Key: map[string]types.AttributeValue{
 			"userId": &types.AttributeValueMemberS{Value: claims.Sub},
 		},

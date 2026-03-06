@@ -451,7 +451,7 @@ func updateOrderStatus(ctx context.Context, id string, request events.APIGateway
 	}
 
 	result, err := client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		TableName:                 aws.String(ordersTable),
+		TableName: aws.String(ordersTable),
 		Key: map[string]types.AttributeValue{
 			"orderId": &types.AttributeValueMemberS{Value: id},
 		},

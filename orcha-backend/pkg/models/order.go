@@ -6,11 +6,11 @@ type OrderStatus string
 
 const (
 	OrderPendingPayment OrderStatus = "PENDING_PAYMENT" // Waiting for payment
-	OrderPending        OrderStatus = "PENDING"          // Payment confirmed, pending processing
-	OrderConfirmed      OrderStatus = "CONFIRMED"        // Order confirmed by admin
-	OrderShipping       OrderStatus = "SHIPPING"         // Order shipped
-	OrderDelivered      OrderStatus = "DELIVERED"        // Order delivered
-	OrderCancelled      OrderStatus = "CANCELLED"        // Order cancelled
+	OrderPending        OrderStatus = "PENDING"         // Payment confirmed, pending processing
+	OrderConfirmed      OrderStatus = "CONFIRMED"       // Order confirmed by admin
+	OrderShipping       OrderStatus = "SHIPPING"        // Order shipped
+	OrderDelivered      OrderStatus = "DELIVERED"       // Order delivered
+	OrderCancelled      OrderStatus = "CANCELLED"       // Order cancelled
 )
 
 type PaymentMethod string
@@ -23,9 +23,9 @@ const (
 type RefundStatus string
 
 const (
-	RefundNone      RefundStatus = "NONE"       // No refund needed
-	RefundPending   RefundStatus = "PENDING"     // Refund requested
-	RefundCompleted RefundStatus = "COMPLETED"   // Refund completed
+	RefundNone      RefundStatus = "NONE"      // No refund needed
+	RefundPending   RefundStatus = "PENDING"   // Refund requested
+	RefundCompleted RefundStatus = "COMPLETED" // Refund completed
 )
 
 type Order struct {
