@@ -10,3 +10,5 @@ export { AuthPage } from './Auth';
 export { CartPage } from './Cart';
 export { CheckoutPage } from './Checkout';
 export { OrdersPage } from './Orders';
+export { ProfilePage } from './Profile';
+export { SearchResultsPage } from './Search';

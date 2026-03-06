@@ -1,7 +1,7 @@
 import { HashRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { MainLayout } from './layouts';
 import { Hero, AboutSection, ProductGallery, BlogSection, LoadingSpinner, NotFound, ChatBox } from './components';
-import { ContactPage, FAQPage, BlogPage, AboutBuchaohPage, ProductListPage, ProductDetailPage, AuthPage, CartPage, CheckoutPage, OrdersPage } from './pages';
+import { ContactPage, FAQPage, BlogPage, AboutBuchaohPage, ProductListPage, ProductDetailPage, AuthPage, CartPage, CheckoutPage, OrdersPage, ProfilePage, SearchResultsPage } from './pages';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { useState, useEffect } from 'react';
@@ -117,8 +117,10 @@ function App() {
               <Route path="/products" element={<ProductListPage />} />
               <Route path="/products/:category" element={<ProductListPage />} />
               <Route path="/products/:category/:productId" element={<ProductDetailPage />} />
+              <Route path="/search" element={<SearchResultsPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/orders" element={<OrdersPage />} />
               <Route path="/orders/:orderId" element={<OrderDetailPage />} />
               <Route path="/about" element={<AboutBuchaohPage />} />

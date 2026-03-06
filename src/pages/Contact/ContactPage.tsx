@@ -84,10 +84,23 @@ export const ContactPage = () => {
         setIsSubmitting(true);
         
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Prepare contact data
+            const contactData = {
+                name: formData.name,
+                email: formData.email,
+                phone: formData.phone,
+                subject: formData.subject,
+                message: formData.message
+            };
+
+            // For now, simulate API call - in production this would call your backend
+            // You can replace this with actual API endpoint: await apiRequest('/contact', 'POST', contactData)
+            console.log('Contact form submitted:', contactData);
             
-            console.log('Form submitted:', formData);
+            // Simulate network delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Success!
             setSubmitted(true);
             setFormData({
                 name: '',
@@ -98,6 +111,11 @@ export const ContactPage = () => {
             });
         } catch (error) {
             console.error('Error submitting form:', error);
+            // Show error message to user
+            setErrors(prev => ({
+                ...prev,
+                submit: t('contact.submissionError') || 'Có lỗi xảy ra. Vui lòng thử lại.'
+            }));
         } finally {
             setIsSubmitting(false);
         }

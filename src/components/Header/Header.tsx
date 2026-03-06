@@ -24,7 +24,8 @@ interface HeaderProps {
 }
 
 export const Header = ({ logoSrc }: HeaderProps) => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
+    const isVi = language === 'vi';
     const navigate = useNavigate();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -110,9 +111,9 @@ export const Header = ({ logoSrc }: HeaderProps) => {
     }, [isMenuOpen, isProductsDropdownOpen, isUserDropdownOpen]);
 
     const handleSearch = (query: string) => {
-        console.log('Searching for:', query);
-        // TODO: Implement search functionality
-        // Could filter products, blog posts, etc.
+        if (query.trim()) {
+            navigate(`/search?q=${encodeURIComponent(query)}`);
+        }
     };
 
     const handleScrollToSection = (href: string) => {
@@ -176,6 +177,11 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                                     key={item.label}
                                     ref={item.hasDropdown ? productsDropdownRef : undefined}
                                     className={item.hasDropdown ? styles.hasDropdown : ''}
+                                    onMouseLeave={() => {
+                                        if (item.hasDropdown) {
+                                            setIsProductsDropdownOpen(false);
+                                        }
+                                    }}
                                 >
                                     {isProducts ? (
                                         <button
@@ -262,8 +268,8 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                 {/* Auth Button */}
                 <div className={styles.authContainer}>
                     {isAuthenticated && user ? (
-                        <div className={styles.userMenu} ref={userDropdownRef}>
-                            <button className={styles.userAvatar} onClick={() => setIsUserDropdownOpen((prev) => !prev)}>
+                        <div className={styles.userMenu} ref={userDropdownRef} onMouseLeave={() => setIsUserDropdownOpen(false)}>
+                            <button className={styles.userAvatar} onMouseEnter={() => setIsUserDropdownOpen(true)}>
                                 <FaUser size={14} />
                             </button>
                             {isUserDropdownOpen && (
@@ -272,9 +278,9 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                                         <span className={styles.userName}>{user.name || user.email}</span>
                                         <span className={styles.userEmail}>{user.email}</span>
                                     </div>
-                                    <Link to="/auth" className={styles.dropdownItem} onClick={() => setIsUserDropdownOpen(false)}>
+                                    <Link to="/profile" className={styles.dropdownItem} onClick={() => setIsUserDropdownOpen(false)}>
                                         <FaUser size={14} />
-                                        <span>Tài khoản</span>
+                                        <span>{isVi ? 'Tài khoản' : 'Profile'}</span>
                                     </Link>
                                     <button
                                         className={styles.dropdownItem}
@@ -282,7 +288,7 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                                         style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                                     >
                                         <FaSignOutAlt size={14} />
-                                        <span>Đăng xuất</span>
+                                        <span>{isVi ? 'Đăng xuất' : 'Logout'}</span>
                                     </button>
                                 </div>
                             )}
