@@ -5,7 +5,11 @@ import { FaFacebookF, FaInstagram, FaYoutube } from 'react-icons/fa';
 import { SiZalo } from 'react-icons/si';
 import { MdLocationOn, MdEmail, MdPhone } from 'react-icons/md';
 
-export const Footer = () => {
+interface FooterProps {
+    logoSrc?: string;
+}
+
+export const Footer = ({ logoSrc }: FooterProps) => {
     const { t } = useLanguage();
     const currentYear = new Date().getFullYear();
 
@@ -13,9 +17,15 @@ export const Footer = () => {
         <footer className={styles.footer}>
             <div className={styles.container}>
                 <div className={styles.grid}>
-                    {/* Brand Section - Cập nhật text */}
+                    {/* Brand Section */}
                     <div className={styles.brandSection}>
-                        <h3 className={styles.brandName}>{t('footer.brandName')}</h3>
+                        <div className={styles.logo}>
+                            {logoSrc ? (
+                                <img src={logoSrc} alt="ORCHA Logo" className={styles.footerLogo} />
+                            ) : (
+                                <h3 className={styles.brandName}>{t('footer.brandName')}</h3>
+                            )}
+                        </div>
                         <p className={styles.brandTagline}>{t('footer.brandTagline')}</p>
                         <p className={styles.description}>
                             {t('footer.description')}
@@ -30,7 +40,7 @@ export const Footer = () => {
                             <li><a href="#about" className={styles.link}>{t('footer.aboutUs')}</a></li>
                             <li><a href="#favorites" className={styles.link}>{t('footer.favorites')}</a></li>
                             <li><a href="#store" className={styles.link}>{t('footer.store')}</a></li>
-                            <li><a href="#blog" className={styles.link}>{t('footer.blog')}</a></li>
+
                             <li><a href="#contact" className={styles.link}>{t('footer.contactLink')}</a></li>
                         </ul>
                     </div>

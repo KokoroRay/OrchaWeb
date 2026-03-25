@@ -111,6 +111,9 @@ export const ChatBox = () => {
 
     return (
         <div className={styles.chatContainer}>
+            {/* Backdrop for mobile */}
+            {isOpen && <div className={`${styles.backdrop} ${isOpen ? styles.backdropActive : ''}`} onClick={() => setIsOpen(false)} />}
+            
             {/* Chat Button */}
             <button
                 className={styles.chatButton}

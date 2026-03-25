@@ -54,13 +54,19 @@
     align-items: center;
 }
 
-.logo img {
+.logoWrapper {
+    display: flex;
+    align-items: center;
+}
+
+.logoImage {
     height: 68px;
     width: auto;
+    object-fit: contain;
     transition: transform var(--transition-base);
 }
 
-.logo img:hover {
+.logoImage:hover {
     transform: scale(1.05);
 }
 
@@ -641,13 +647,19 @@
     }
 
     .nav {
-        padding: 80px 12px 0 0;
+        padding: 80px 0 0 0;
+        backdrop-filter: blur(5px);
+        background: rgba(0, 0, 0, 0.2);
     }
 
     .navList {
         width: 100%;
-        max-width: 280px;
-        padding: 0.75rem 0;
+        max-width: 320px;
+        margin-left: auto;
+        border-radius: 12px 0 0 12px;
+        height: 100vh;
+        max-height: 100vh;
+        padding-bottom: 120px;
     }
 
     .navLink {

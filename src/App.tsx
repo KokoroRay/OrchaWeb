@@ -1,7 +1,7 @@
 import { HashRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { MainLayout } from './layouts';
-import { Hero, AboutSection, ProductGallery, BlogSection, LoadingSpinner, NotFound, ChatBox } from './components';
-import { ContactPage, FAQPage, BlogPage, AboutBuchaohPage, ProductListPage, ProductDetailPage, AuthPage, CartPage, CheckoutPage, OrdersPage, ProfilePage, SearchResultsPage } from './pages';
+import { Hero, AboutSection, ProductGallery, LoadingSpinner, NotFound, ChatBox } from './components';
+import { ContactPage, FAQPage, AboutBuchaohPage, ProductListPage, ProductDetailPage, AuthPage, CartPage, CheckoutPage, OrdersPage, ProfilePage, SearchResultsPage } from './pages';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { useState, useEffect } from 'react';
@@ -10,10 +10,10 @@ import { AdminDashboard } from './pages/Admin/AdminDashboard';
 import { OrderDetailPage } from './pages/Orders/OrderDetailPage';
 
 // Import images from assets
-import logoImage from './assets/logos/Logo.png';
-import heroImage from './assets/images/hero/hero-image.png';
-import aboutImage1 from './assets/images/about/about-1.png';
-import aboutImage2 from './assets/images/about/about-2.png';
+import logoImage from './assets/logos/logo.png';
+import heroImage from './assets/images/header_banner.png';
+import aboutImage1 from './assets/images/left_content.png';
+import aboutImage2 from './assets/images/bottom_banner.png';
 
 // Homepage Component
 const HomePage = () => {
@@ -37,7 +37,6 @@ const HomePage = () => {
       <Hero imageSrc={heroImage} />
       <AboutSection leftImageSrc={aboutImage1} bottomImageSrc={aboutImage2} />
       <ProductGallery />
-      <BlogSection />
     </div>
   );
 };
@@ -126,7 +125,6 @@ function App() {
               <Route path="/about" element={<AboutBuchaohPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/faq" element={<FAQPage />} />
-              <Route path="/blog" element={<BlogPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

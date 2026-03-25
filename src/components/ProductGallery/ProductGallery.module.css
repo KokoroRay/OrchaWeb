@@ -391,12 +391,12 @@
     }
     
     .carouselWrapper {
-        height: clamp(520px, 70vh, 580px);
+        height: clamp(480px, 65vh, 540px);
         margin-bottom: 2rem;
     }
     
     .productCard {
-        width: clamp(280px, 85vw, 350px);
+        width: clamp(260px, 80vw, 320px);
     }
     
     .imagePlaceholder {

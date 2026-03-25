@@ -230,7 +230,7 @@
   }
 
   .mainImage {
-    min-height: 220px;
+    min-height: 320px;
     padding: 1.5rem;
   }
 
@@ -247,7 +247,8 @@
   }
 
   .productSummary {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    padding: 0 4px;
   }
 
   .price {
@@ -280,15 +281,30 @@
   }
 
   .ctaButtons {
-    flex-direction: row;
-    gap: 0.6rem;
-    margin-top: 0.6rem;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 1rem;
   }
 
   .ctaPrimary,
-  .ctaSecondary {
-    padding: 0.8rem 1.2rem;
-    font-size: 0.85rem;
+  .ctaSecondary,
+  .ctaTertiary {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    width: 100%;
+  }
+
+  .quantitySection {
+    margin-bottom: 0.5rem;
+    justify-content: space-between;
+  }
+
+  .quantityControl {
+    height: 48px; /* Better touch target */
+  }
+
+  .quantityControl button {
+    width: 48px;
   }
 }
 
@@ -969,14 +985,16 @@
   }
 
   .tabButton {
-    padding: 0.8rem 1rem;
-    font-size: 0.85rem;
+    padding: 0.8rem 0.5rem;
+    font-size: 0.8rem;
     flex: 1;
-    min-width: calc(50% - 0.25rem);
+    min-width: calc(33.33% - 0.5rem);
+    text-align: center;
+    border-bottom: 2px solid var(--border);
   }
 
   .tabButton:last-child {
-    flex: 1 1 100%;
+    flex: 1;
   }
 
   .nutritionGrid {
@@ -1144,7 +1162,7 @@
 
 .quantityControl input {
   width: 70px;
-  height: 40px;
+  height: 48px; /* Match button height on mobile */
   text-align: center;
   border: 2px solid var(--border);
   border-radius: 8px;

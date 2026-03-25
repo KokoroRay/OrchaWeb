@@ -13,7 +13,7 @@ export const MainLayout = ({ children, logoSrc }: MainLayoutProps) => {
         <div className={styles.layout}>
             <Header logoSrc={logoSrc} />
             <main className={styles.main}>{children}</main>
-            <Footer />
+            <Footer logoSrc={logoSrc} />
         </div>
     );
 };

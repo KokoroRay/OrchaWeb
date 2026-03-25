@@ -9,7 +9,6 @@ import {
     FaHome,
     FaInfoCircle,
     FaBoxOpen,
-    FaNewspaper,
     FaEnvelope,
     FaUser,
     FaSignOutAlt,
@@ -147,7 +146,6 @@ export const Header = ({ logoSrc }: HeaderProps) => {
             ]
         },
         { label: t('nav.about'), href: '/about', icon: FaInfoCircle },
-        { label: t('nav.blog'), href: '/blog', icon: FaNewspaper },
         { label: t('nav.faq'), href: '/faq', icon: FaInfoCircle },
         { label: t('nav.contact'), href: '/contact', icon: FaEnvelope },
     ];
@@ -157,7 +155,9 @@ export const Header = ({ logoSrc }: HeaderProps) => {
             <div className={styles.container}>
                 <div className={styles.logo} onClick={handleHomeClick} style={{ cursor: 'pointer' }}>
                     {logoSrc ? (
-                        <img src={logoSrc} alt="ORCHA Logo" />
+                        <div className={styles.logoWrapper}>
+                            <img src={logoSrc} alt="ORCHA Logo" className={styles.logoImage} />
+                        </div>
                     ) : (
                         <div className={styles.logoText}>
                             <span className={styles.logoMain}>ORCHA</span>

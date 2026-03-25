@@ -362,7 +362,8 @@
     }
     
     .description {
-        font-size: clamp(0.8rem, 2.5vw, 0.95rem);
+        font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+        margin-bottom: 1.5rem;
     }
     
     .features {

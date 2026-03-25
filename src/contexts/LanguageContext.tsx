@@ -13,10 +13,9 @@ const translations = {
         // Header
         'nav.home': 'TRANG CHỦ',
         'nav.products': 'SẢN PHẨM',
-        'nav.products.drinks': 'Nước',
-        'nav.products.fertilizers': 'Phân',
+        'nav.products.drinks': 'Nước uống',
+        'nav.products.fertilizers': 'Phân bón',
         'nav.about': 'VỀ ORCHA',
-        'nav.blog': 'BLOG',
         'nav.faq': 'FAQ',
         'nav.contact': 'LIÊN HỆ',
         
@@ -61,17 +60,6 @@ const translations = {
         'products.interest': 'Quan tâm đến sản phẩm ORCHA?',
         'products.consult': 'Liên hệ với chúng tôi để được tư vấn và báo giá chi tiết',
         
-        // Blog
-        'blog.title': 'Blog ORCHA',
-        'blog.sectionTitle': 'BLOGS OF ORCHA',
-        'blog.subtitle': 'Chia sẻ kiến thức và kinh nghiệm về nông nghiệp sinh học',
-        'blog.all': 'Tất cả',
-        'blog.products': 'Sản phẩm',
-        'blog.guide': 'Hướng dẫn',
-        'blog.process': 'Quy trình',
-        'blog.knowledge': 'Kiến thức',
-        'blog.readMore': 'Đọc thêm →',
-        'blog.backToList': 'Quay lại danh sách',
         
         // Contact
         'contact.title': 'Liên Hệ Với Chúng Tôi',
@@ -184,19 +172,6 @@ const translations = {
         'product.fert3.title': 'Phân Lỏng ORCHA',
         'product.fert3.desc': 'Dung dịch vi sinh lỏng dễ sử dụng cho cây trồng',
         
-        // Blog Posts
-        'blog.post1.title': 'Lợi ích của phân bón sinh học ORCHA',
-        'blog.post1.excerpt': 'Khám phá những ưu điểm vượt trội của phân bón từ quá trình lên men tự nhiên cho đất trồng và cây trồng của bạn.',
-        'blog.post1.content': 'Phân bón sinh học ORCHA được sản xuất từ quá trình lên men trái cây tự nhiên, mang lại nhiều lợi ích vượt trội cho đất trồng và cây trồng. Sản phẩm giúp cải thiện cấu trúc đất, tăng sinh vật có lợi, thân thiện với môi trường và tăng năng suất cây trồng một cách bền vững.',
-        'blog.post2.title': 'Hướng dẫn sử dụng ORCHA hiệu quả',
-        'blog.post2.excerpt': 'Cách sử dụng sản phẩm ORCHA hiệu quả nhất cho vườn cây của bạn với hướng dẫn chi tiết từ chuyên gia.',
-        'blog.post2.content': 'Để đạt hiệu quả cao nhất khi sử dụng ORCHA, bạn cần tuân thủ đúng hướng dẫn sử dụng và thời điểm bón phù hợp. Pha loãng ORCHA với nước theo tỷ lệ 1:100 đối với tưới gốc, 1:200 đối với phun lá. Thời gian tốt nhất là sáng sớm hoặc chiều mát.',
-        'blog.post3.title': 'Quy trình sản xuất ORCHA',
-        'blog.post3.excerpt': 'Tìm hiểu về quy trình lên men trái cây với men vi sinh tự nhiên, đảm bảo chất lượng và an toàn tuyệt đối.',
-        'blog.post3.content': 'ORCHA được sản xuất theo quy trình khép kín, đảm bảo chất lượng và an toàn cho người tiêu dùng. Quá trình bao gồm chuẩn bị nguyên liệu tươi ngon, lên men tự nhiên với men vi sinh có lợi, lọc và tinh chế, cuối cùng là đóng chai và kiểm tra chất lượng nghiêm ngặt.',
-        'blog.post4.title': 'Lợi ích của nông nghiệp sinh học',
-        'blog.post4.excerpt': 'Nông nghiệp sinh học là xu hướng bền vững cho tương lai, mang lại lợi ích cho môi trường và sức khỏe con người.',
-        'blog.post4.content': 'Nông nghiệp sinh học không chỉ giúp bảo vệ môi trường mà còn tạo ra những sản phẩm nông nghiệp an toàn, chất lượng cao. Việc sử dụng các sản phẩm sinh học như ORCHA giúp giảm thiểu hóa chất, cải thiện độ phì nhiêu đất và tăng cường hệ sinh thái tự nhiên.',
         
         // UI Elements
         'ui.drinkType': 'Nước uống',
@@ -250,7 +225,6 @@ const translations = {
         'nav.products.drinks': 'Drinks',
         'nav.products.fertilizers': 'Fertilizers',
         'nav.about': 'ABOUT ORCHA',
-        'nav.blog': 'BLOG',
         'nav.faq': 'FAQ',
         'nav.contact': 'CONTACT',
         
@@ -295,17 +269,6 @@ const translations = {
         'products.interest': 'Interested in ORCHA products?',
         'products.consult': 'Contact us for consultation and detailed pricing',
         
-        // Blog
-        'blog.title': 'ORCHA Blog',
-        'blog.sectionTitle': 'BLOGS OF ORCHA',
-        'blog.subtitle': 'Sharing knowledge and experience about biological agriculture',
-        'blog.all': 'All',
-        'blog.products': 'Products',
-        'blog.guide': 'Guide',
-        'blog.process': 'Process',
-        'blog.knowledge': 'Knowledge',
-        'blog.readMore': 'Read More →',
-        'blog.backToList': 'Back to List',
         
         // Contact
         'contact.title': 'Contact Us',
@@ -422,19 +385,6 @@ const translations = {
         'product.fert3.title': 'ORCHA Liquid',
         'product.fert3.desc': 'Liquid microbial solution easy to use for plants',
         
-        // Blog Posts
-        'blog.post1.title': 'Benefits of ORCHA Bio-Fertilizer',
-        'blog.post1.excerpt': 'Discover the outstanding advantages of fertilizer from natural fermentation process for your soil and plants.',
-        'blog.post1.content': 'ORCHA bio-fertilizer is produced from natural fruit fermentation process, bringing many outstanding benefits to soil and plants. The product helps improve soil structure, increase beneficial organisms, environmentally friendly and sustainably increase plant productivity.',
-        'blog.post2.title': 'Guide to Using ORCHA Effectively',
-        'blog.post2.excerpt': 'How to use ORCHA products most effectively for your garden with detailed guidance from experts.',
-        'blog.post2.content': 'To achieve the highest efficiency when using ORCHA, you need to follow proper usage guidelines and appropriate application timing. Dilute ORCHA with water at a ratio of 1:100 for root watering, 1:200 for foliar spray. The best time is early morning or cool evening.',
-        'blog.post3.title': 'ORCHA Production Process',
-        'blog.post3.excerpt': 'Learn about the fruit fermentation process with natural microorganisms, ensuring absolute quality and safety.',
-        'blog.post3.content': 'ORCHA is produced according to a closed process, ensuring quality and safety for consumers. The process includes preparing fresh ingredients, natural fermentation with beneficial microorganisms, filtration and purification, finally bottling and strict quality control.',
-        'blog.post4.title': 'Benefits of Biological Agriculture',
-        'blog.post4.excerpt': 'Biological agriculture is a sustainable trend for the future, bringing benefits to the environment and human health.',
-        'blog.post4.content': 'Biological agriculture not only helps protect the environment but also creates safe, high-quality agricultural products. Using biological products like ORCHA helps reduce chemicals, improve soil fertility and enhance natural ecosystems.',
         
         // UI Elements
         'ui.drinkType': 'Drink',

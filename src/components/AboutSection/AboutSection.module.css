@@ -136,7 +136,7 @@
     }
 
     .container {
-        padding: 0 20px; /* Padding 20px hai bên cho toàn bộ nội dung */
+        padding: 0 16px; 
     }
 
     .grid {
@@ -151,9 +151,9 @@
     /* Mobile Image Styling - Ảnh chai nước */
     .leftImage {
         width: 100%;
-        max-width: 400px;
-        max-height: 300px; /* Giới hạn chiều cao */
-        border-radius: 16px; /* Bo góc 16px */
+        max-width: 320px;
+        max-height: 240px; 
+        border-radius: 12px;
         margin: 0 auto;
         overflow: hidden;
     }

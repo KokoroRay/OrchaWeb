@@ -14,13 +14,6 @@ export interface FaqItem {
   answerEn: string;
 }
 
-export interface BlogReference {
-  title: string;
-  titleEn: string;
-  description: string;
-  descriptionEn?: string;
-  url?: string;
-}
 
 export interface ProductDetail {
   id: string;
@@ -71,7 +64,6 @@ export interface ProductDetail {
   usage: string;
   usageEn: string;
   faqItems: FaqItem[];
-  blogReferences: BlogReference[];
   disclaimer: string;
   disclaimerEn: string;
   tips: string[];
@@ -160,11 +152,6 @@ export const productDetailsBackup: Record<string, ProductDetail> = {
       { question: 'Tại sao nước khóm lên men có vị chua?', questionEn: 'Why is fermented khom sour?', answer: 'Vị chua từ lactic acid & acetic acid được vi sinh vật tạo ra trong 14-21 ngày lên men. Những acid này: (1) Bảo quản tự nhiên (thay thế bảo quản hóa học), (2) Chống viêm (lợi cho ruột), (3) Hỗ trợ tiêu hóa axit. Vị chua cũng là dấu hiệu lên men thành công. Nếu không thích, có thể pha loãng với nước ấm 1:1.', answerEn: 'Sourness from lactic & acetic acids created by microbes during 14-21 day fermentation. These acids: (1) Natural preservation (replaces chemicals), (2) Anti-inflammatory (gut benefit), (3) Support acid digestion. Sourness also signals successful fermentation. If dislike, dilute 1:1 with warm water.' },
       { question: 'Khi nào hết hạn? Bảo quản như thế nào?', questionEn: 'When does it expire? How to store?', answer: 'Hạn: 12 tháng từ ngày sản xuất (nếu bảo quản đúng). Bảo quản: (1) Tủ lạnh 2-8°C (bắt buộc), (2) Tránh ánh sáng trực tiếp, (3) Không để ở nhiệt độ phòng quá 1 giờ. Sau khi mở: Sử dụng trong 7 ngày, bảo quản tủ lạnh, lắc trước dùng. Nếu thấy mùi lạ hay thay đổi màu sắc → không dùng.', answerEn: 'Expiry: 12 months from production date (if stored correctly). Storage: (1) Fridge 2-8°C (required), (2) Avoid direct light, (3) Don\'t leave at room temp over 1 hour. After opening: Use within 7 days, refrigerate, shake before use. If smell odd or color changes → don\'t use.' }
     ],
-    blogReferences: [
-      { title: 'Inulin - Tiền tiêu đường tự nhiên', titleEn: 'Inulin - Natural Prebiotic', description: 'Cách inulin cân bằng đường huyết, nuôi vi khuẩn tốt, hỗ trợ cân nặng', url: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3705355/' },
-      { title: 'Lactic Acid: Tự nhiên chống viêm', titleEn: 'Lactic Acid: Natural Anti-Inflammatory', description: 'Lactic acid từ lên men giúp giảm viêm ruột, cải thiện sức khỏe đường ruột', url: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6770950/' },
-      { title: 'Jerusalem Artichoke - Nghiên cứu dinh dưỡng', titleEn: 'Jerusalem Artichoke - Nutritional Research', description: 'Lịch sử sử dụng khóm trong dân gian, lợi ích dinh dưỡng, cách chế biến hiện đại', url: 'https://www.researchgate.net/publication/228634688_Jerusalem_artichoke_and_chicory_inulin_in_bakery_products' }
-    ],
     disclaimer: '⚠️ TUYÊN BỐ BR: Sản phẩm này là thực phẩm bảo vệ sức khỏe, KHÔNG PHẢI THUỐC. Không dự định chẩn đoán, điều trị, hoặc chữa bệnh. Được sản xuất theo tiêu chuẩn ATTP, thanh trùng ở 73°C, bảo quản 2-8°C, hạn 12 tháng. Nếu mang thai, cho con bú, có tiêu chảy, hoặc dị ứng, tham khảo bác sĩ. Không phù hợp với người mất khiếm định đường ruột.',
     disclaimerEn: '⚠️ BR STATEMENT: This product is a functional food, NOT A DRUG. Not intended to diagnose, treat, or cure disease. Produced to food safety standards, pasteurized at 73°C, stored 2-8°C, 12-month shelf life. If pregnant, nursing, have diarrhea, or allergies, consult doctor. Not suitable for those with compromised gut conditions.',
   },
@@ -216,7 +203,6 @@ export const productDetailsBackup: Record<string, ProductDetail> = {
     faqItems: [
       { question: 'Có giảm cholesterol không?', questionEn: 'Can it reduce cholesterol?', answer: 'Có, khi dùng đều đặn.', answerEn: 'Yes, with regular use.' }
     ],
-    blogReferences: [],
     disclaimer: '⚠️ Thực phẩm bảo vệ sức khỏe, không phải thuốc.',
     disclaimerEn: '⚠️ Functional food, not medicine.',
     tips: ['Uống đều đặn mỗi ngày'],
@@ -257,7 +243,6 @@ export const productDetailsBackup: Record<string, ProductDetail> = {
     usage: 'Uống 100-150ml/ngày.',
     usageEn: 'Drink 100-150ml/day.',
     faqItems: [],
-    blogReferences: [],
     disclaimer: '⚠️ Thực phẩm bảo vệ sức khỏe, không phải thuốc.',
     disclaimerEn: '⚠️ Functional food, not medicine.',
     tips: ['Lắc đều trước khi uống'],
@@ -298,7 +283,6 @@ export const productDetailsBackup: Record<string, ProductDetail> = {
     usage: 'Uống 100ml/ngày.',
     usageEn: 'Drink 100ml/day.',
     faqItems: [],
-    blogReferences: [],
     disclaimer: '⚠️ Thực phẩm bảo vệ sức khỏe, không phải thuốc.',
     disclaimerEn: '⚠️ Functional food, not medicine.',
     tips: ['Uống ấm để tăng hiệu quả'],
@@ -337,7 +321,6 @@ export const productDetailsBackup: Record<string, ProductDetail> = {
     usage: 'Uống 150ml/ngày trước bữa ăn.',
     usageEn: 'Drink 150ml/day before meals.',
     faqItems: [],
-    blogReferences: [],
     disclaimer: '⚠️ Thực phẩm bảo vệ sức khỏe, không phải thuốc.',
     disclaimerEn: '⚠️ Functional food, not medicine.',
     tips: ['Kết hợp chế độ ăn lành mạnh'],
@@ -376,7 +359,6 @@ export const productDetailsBackup: Record<string, ProductDetail> = {
     usage: '1-2 lít/10m2.',
     usageEn: '1-2L/10m2.',
     faqItems: [],
-    blogReferences: [],
     disclaimer: '⚠️ Đây là phân bón, không phải thuốc BVTV.',
     disclaimerEn: '⚠️ Fertilizer only, not pesticide.',
     tips: ['Tưới khi đất ẩm'],
@@ -415,7 +397,6 @@ export const productDetailsBackup: Record<string, ProductDetail> = {
     usage: '2-3 lít/10m2.',
     usageEn: '2-3L/10m2.',
     faqItems: [],
-    blogReferences: [],
     disclaimer: '⚠️ Đây là phân bón, không phải thuốc BVTV.',
     disclaimerEn: '⚠️ Fertilizer only, not pesticide.',
     tips: ['Bón định kỳ theo chu kỳ sinh trưởng'],
@@ -454,7 +435,6 @@ export const productDetailsBackup: Record<string, ProductDetail> = {
     usage: '2-3 lít/cây trưởng thành.',
     usageEn: '2-3L per mature tree.',
     faqItems: [],
-    blogReferences: [],
     disclaimer: '⚠️ Đây là phân bón, không phải thuốc BVTV.',
     disclaimerEn: '⚠️ Fertilizer only, not pesticide.',
     tips: ['Bón giai đoạn trước ra hoa và nuôi trái'],

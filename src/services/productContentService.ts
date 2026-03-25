@@ -106,7 +106,6 @@ const createFallbackDetail = (product: AdminProduct): ProductDetail => {
         usage: commonUsage,
         usageEn: commonUsage,
         faqItems: [],
-        blogReferences: [],
         disclaimer: '⚠️ Thực phẩm/bio-product, vui lòng sử dụng theo hướng dẫn.',
         disclaimerEn: '⚠️ Functional/bio product, use as directed.',
         tips: commonTips,
