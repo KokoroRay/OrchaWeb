@@ -14,7 +14,7 @@ import {
     FiCheckCircle,
     FiRefreshCw,
 } from 'react-icons/fi';
-import logoImage from '../../assets/logos/Logo.png';
+import logoImage from '../../assets/logos/logo.png';
 import styles from './AuthPage.module.css';
 
 type AuthMode = 'login' | 'register' | 'verify' | 'forgot-password' | 'reset-password';

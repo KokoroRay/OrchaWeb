@@ -11,7 +11,7 @@ import { useAuthContext } from '../../contexts/AuthContext';
 import { orderService, type Order } from '../../services/orderService';
 import { adminService, type AdminCategory, type AdminCategoryInput, type AdminFeedback, type AdminProduct, type AdminProductInput, type AdminUser, type AdminUserRole } from '../../services/adminService';
 import { uploadImage, type UploadProgress } from '../../services/imageService';
-import logoImage from '../../assets/logos/Logo.png';
+import logoImage from '../../assets/logos/logo.png';
 import styles from './AdminDashboard.module.css';
 
 type AdminTab = 'overview' | 'categories' | 'products' | 'orders' | 'users' | 'feedback';
