@@ -113,6 +113,9 @@ func createOrder(ctx context.Context, request events.APIGatewayProxyRequest) (ev
 	if input.ShippingName == "" || input.ShippingPhone == "" || input.ShippingAddr == "" {
 		return response.Error(400, "Thiếu thông tin giao hàng"), nil
 	}
+	if !strings.Contains(strings.ToLower(input.ShippingAddr), "cần thơ") && !strings.Contains(strings.ToLower(input.ShippingAddr), "can tho") {
+		return response.Error(400, "Địa chỉ giao hàng chỉ hỗ trợ Cần Thơ"), nil
+	}
 
 	// Validate payment method
 	if input.PaymentMethod == "" {

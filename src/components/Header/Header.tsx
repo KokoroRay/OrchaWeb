@@ -277,6 +277,9 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                                     <div className={styles.userInfo}>
                                         <span className={styles.userName}>{user.name || user.email}</span>
                                         <span className={styles.userEmail}>{user.email}</span>
+                                        <span className={styles.userAddress}>
+                                            {user.address || (isVi ? 'Chưa có địa chỉ giao hàng' : 'No shipping address yet')}
+                                        </span>
                                     </div>
                                     <Link to="/profile" className={styles.dropdownItem} onClick={() => setIsUserDropdownOpen(false)}>
                                         <FaUser size={14} />

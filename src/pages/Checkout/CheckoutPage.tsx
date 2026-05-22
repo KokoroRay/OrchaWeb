@@ -6,7 +6,16 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { cartService, type CartItemWithProduct } from '../../services/cartService';
 import { orderService, type CreateOrderInput } from '../../services/orderService';
 import { paymentService, type PaymentMethod } from '../../services/paymentService';
+import {
+    canThoDistricts,
+    formatCanThoAddress,
+    getCanThoWards,
+    parseCanThoAddress,
+    canThoProvinceLabel,
+} from '../../data/canThoAddressData';
 import styles from './CheckoutPage.module.css';
+
+type AddressMode = 'saved' | 'new';
 
 export const CheckoutPage = () => {
     const { user, isAuthenticated } = useAuthContext();
@@ -20,11 +29,19 @@ export const CheckoutPage = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('COD');
+    const [addressMode, setAddressMode] = useState<AddressMode>(user?.address ? 'saved' : 'new');
+    const [newAddress, setNewAddress] = useState(() => {
+        const parsed = parseCanThoAddress(user?.address);
+        return {
+            district: parsed.district,
+            ward: parsed.ward,
+            detail: parsed.detail,
+        };
+    });
 
     const [formData, setFormData] = useState({
         shippingName: user?.name || '',
         shippingPhone: '',
-        shippingAddress: '',
         note: '',
     });
 
@@ -36,6 +53,23 @@ export const CheckoutPage = () => {
             navigate('/auth');
         }
     }, [isAuthenticated, navigate]);
+
+    useEffect(() => {
+        if (user?.name) {
+            setFormData((prev) => ({
+                ...prev,
+                shippingName: user.name || prev.shippingName,
+            }));
+        }
+
+        if (user?.address) {
+            const parsed = parseCanThoAddress(user.address);
+            setAddressMode('saved');
+            setNewAddress(parsed);
+        } else {
+            setAddressMode('new');
+        }
+    }, [user?.name, user?.address]);
 
     // Load cart items
     useEffect(() => {
@@ -70,6 +104,25 @@ export const CheckoutPage = () => {
         }));
     }, []);
 
+    const handleAddressChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+
+        setNewAddress((prev) => {
+            if (name === 'district') {
+                return {
+                    district: value,
+                    ward: '',
+                    detail: prev.detail,
+                };
+            }
+
+            return {
+                ...prev,
+                [name]: value,
+            };
+        });
+    }, []);
+
     // Calculate total
     const totalPrice = cartItems.reduce((sum, item) => {
         const price = item.salePrice || item.price;
@@ -80,7 +133,14 @@ export const CheckoutPage = () => {
     const isFormValid =
         formData.shippingName.trim() !== '' &&
         formData.shippingPhone.trim() !== '' &&
-        formData.shippingAddress.trim() !== '';
+        (
+            (addressMode === 'saved' && Boolean(user?.address?.trim())) ||
+            (addressMode === 'new' && Boolean(newAddress.detail.trim()) && Boolean(newAddress.ward) && Boolean(newAddress.district))
+        );
+
+    const resolvedShippingAddress = addressMode === 'saved'
+        ? (user?.address || '')
+        : formatCanThoAddress(newAddress.detail, newAddress.ward, newAddress.district);
 
     // Submit order
     const handleSubmit = async (e: React.FormEvent) => {
@@ -99,7 +159,7 @@ export const CheckoutPage = () => {
             const orderInput: CreateOrderInput = {
                 shippingName: formData.shippingName.trim(),
                 shippingPhone: formData.shippingPhone.trim(),
-                shippingAddress: formData.shippingAddress.trim(),
+                shippingAddress: resolvedShippingAddress.trim(),
                 note: formData.note.trim(),
                 paymentMethod: selectedPayment,
             };
@@ -115,7 +175,7 @@ export const CheckoutPage = () => {
                     orderId: order.orderId,
                     customerName: formData.shippingName,
                     customerPhone: formData.shippingPhone,
-                    customerAddress: formData.shippingAddress,
+                    customerAddress: resolvedShippingAddress,
                 };
 
                 const paymentResponse = await paymentService.createPayOSPayment(paymentInfo);
@@ -134,7 +194,7 @@ export const CheckoutPage = () => {
                     orderId: order.orderId,
                     customerName: formData.shippingName,
                     customerPhone: formData.shippingPhone,
-                    customerAddress: formData.shippingAddress,
+                    customerAddress: resolvedShippingAddress,
                 });
             }
 
@@ -243,20 +303,81 @@ export const CheckoutPage = () => {
 
                         <div className={styles.formGroup}>
                             <label className={styles.label}>{isVi ? 'Địa chỉ giao hàng' : 'Shipping Address'}</label>
-                            <textarea
-                                name="shippingAddress"
-                                className={styles.textarea}
-                                placeholder={
-                                    isVi
-                                        ? 'Nhập địa chỉ giao hàng đầy đủ'
-                                        : 'Enter complete shipping address'
-                                }
-                                value={formData.shippingAddress}
-                                onChange={handleInputChange}
-                                disabled={submitting}
-                                rows={3}
-                                required
-                            />
+                            <div className={styles.addressModeTabs}>
+                                <button
+                                    type="button"
+                                    className={`${styles.addressModeBtn} ${addressMode === 'saved' ? styles.addressModeBtnActive : ''}`}
+                                    onClick={() => setAddressMode('saved')}
+                                    disabled={!user?.address}
+                                >
+                                    {isVi ? 'Địa chỉ tài khoản' : 'Saved address'}
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`${styles.addressModeBtn} ${addressMode === 'new' ? styles.addressModeBtnActive : ''}`}
+                                    onClick={() => setAddressMode('new')}
+                                >
+                                    {isVi ? 'Nhập địa chỉ mới' : 'New address'}
+                                </button>
+                            </div>
+
+                            {addressMode === 'saved' ? (
+                                <div className={styles.savedAddressBox}>
+                                    <strong>{isVi ? 'Địa chỉ đã lưu' : 'Saved address'}</strong>
+                                    <p>{user?.address || (isVi ? 'Chưa có địa chỉ, vui lòng nhập mới' : 'No address saved, please enter a new one')}</p>
+                                </div>
+                            ) : (
+                                <div className={styles.newAddressGrid}>
+                                    <div className={styles.formGroupCompact}>
+                                        <label className={styles.label}>{isVi ? 'Tỉnh / Thành phố' : 'Province / City'}</label>
+                                        <input value={canThoProvinceLabel} className={styles.input} disabled />
+                                    </div>
+
+                                    <div className={styles.formGroupCompact}>
+                                        <label className={styles.label}>{isVi ? 'Quận / Huyện' : 'District'}</label>
+                                        <select
+                                            name="district"
+                                            className={styles.input}
+                                            value={newAddress.district}
+                                            onChange={handleAddressChange}
+                                            disabled={submitting}
+                                        >
+                                            <option value="">{isVi ? '-- Chọn quận / huyện --' : '-- Select district --'}</option>
+                                            {canThoDistricts.map((district) => (
+                                                <option key={district.value} value={district.value}>{district.labelVi}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className={styles.formGroupCompact}>
+                                        <label className={styles.label}>{isVi ? 'Phường / Xã' : 'Ward / Commune'}</label>
+                                        <select
+                                            name="ward"
+                                            className={styles.input}
+                                            value={newAddress.ward}
+                                            onChange={handleAddressChange}
+                                            disabled={submitting || !newAddress.district}
+                                        >
+                                            <option value="">{isVi ? '-- Chọn phường / xã --' : '-- Select ward --'}</option>
+                                            {getCanThoWards(newAddress.district).map((ward) => (
+                                                <option key={ward.value} value={ward.value}>{ward.labelVi}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className={styles.formGroupCompact}>
+                                        <label className={styles.label}>{isVi ? 'Chi tiết địa điểm' : 'Detailed address'}</label>
+                                        <input
+                                            name="detail"
+                                            className={styles.input}
+                                            placeholder={isVi ? 'Số nhà, tên đường, khu vực...' : 'House number, street, area...'}
+                                            value={newAddress.detail}
+                                            onChange={handleAddressChange}
+                                            disabled={submitting}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className={styles.formGroup}>
@@ -388,7 +509,7 @@ export const CheckoutPage = () => {
                             </p>
                             <p>
                                 <strong>{isVi ? 'Địa chỉ:' : 'Address:'}</strong>
-                                <span>{formData.shippingAddress || '---'}</span>
+                                <span>{resolvedShippingAddress || '---'}</span>
                             </p>
                         </div>
                     </div>

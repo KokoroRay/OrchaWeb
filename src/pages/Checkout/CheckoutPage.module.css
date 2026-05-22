@@ -145,6 +145,10 @@
   margin-bottom: 1.5rem;
 }
 
+.formGroupCompact {
+  margin-bottom: 0;
+}
+
 .label {
   display: block;
   font-size: 0.95rem;
@@ -181,6 +185,71 @@
 .textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+.addressModeTabs {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.addressModeBtn {
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--color-gray-300, #e5e5e5);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-gray-700, #555);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addressModeBtn:hover:not(:disabled) {
+  border-color: var(--color-primary, #ef789a);
+  color: var(--color-primary, #ef789a);
+}
+
+.addressModeBtnActive {
+  border-color: var(--color-primary, #ef789a);
+  background: rgba(239, 120, 154, 0.1);
+  color: var(--color-primary-dark, #d85080);
+}
+
+.addressModeBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.savedAddressBox {
+  padding: 1rem;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fff7fb 0%, #ffffff 100%);
+  border: 1px solid rgba(239, 120, 154, 0.14);
+  color: var(--color-gray-700, #555);
+}
+
+.savedAddressBox strong {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--color-primary-dark, #d85080);
+}
+
+.savedAddressBox p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.newAddressGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .newAddressGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .submitBtn {

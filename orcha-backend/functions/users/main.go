@@ -114,6 +114,10 @@ func updateProfile(ctx context.Context, request events.APIGatewayProxyRequest) (
 		return response.Error(400, "Dữ liệu không hợp lệ"), nil
 	}
 
+	if input.Address != "" && !strings.Contains(strings.ToLower(input.Address), "cần thơ") && !strings.Contains(strings.ToLower(input.Address), "can tho") {
+		return response.Error(400, "Địa chỉ giao hàng chỉ hỗ trợ Cần Thơ"), nil
+	}
+
 	now := time.Now().UTC().Format(time.RFC3339)
 
 	// Build update expression dynamically

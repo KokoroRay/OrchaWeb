@@ -7,6 +7,13 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { orderService, type Order } from '../../services/orderService';
 import { userService } from '../../services/userService';
 import { uploadImage, type UploadProgress } from '../../services/imageService';
+import {
+    canThoDistricts,
+    formatCanThoAddress,
+    getCanThoWards,
+    parseCanThoAddress,
+    canThoProvinceLabel,
+} from '../../data/canThoAddressData';
 import styles from './ProfilePage.module.css';
 
 const orderStatusLabels: Record<string, { vi: string; en: string; color: string }> = {
@@ -31,6 +38,15 @@ export const ProfilePage = () => {
     const [avatarUrl, setAvatarUrl] = useState<string>(user?.avatarUrl || '');
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<number>(0);
+    const [savingAddress, setSavingAddress] = useState(false);
+    const [addressForm, setAddressForm] = useState(() => {
+        const parsed = parseCanThoAddress(user?.address);
+        return {
+            district: parsed.district,
+            ward: parsed.ward,
+            detail: parsed.detail,
+        };
+    });
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Check authentication
@@ -61,6 +77,16 @@ export const ProfilePage = () => {
             loadOrders();
         }
     }, [isAuthenticated, isVi]);
+
+    useEffect(() => {
+        const parsed = parseCanThoAddress(user?.address);
+        setAvatarUrl(user?.avatarUrl || '');
+        setAddressForm({
+            district: parsed.district,
+            ward: parsed.ward,
+            detail: parsed.detail,
+        });
+    }, [user?.address, user?.avatarUrl]);
 
     const handleLogout = useCallback(() => {
         logout();
@@ -105,6 +131,52 @@ export const ProfilePage = () => {
         } finally {
             setUploadingAvatar(false);
             setUploadProgress(0);
+        }
+    };
+
+    const handleAddressChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+
+        setAddressForm((prev) => {
+            if (name === 'district') {
+                return {
+                    district: value,
+                    ward: '',
+                    detail: prev.detail,
+                };
+            }
+
+            return {
+                ...prev,
+                [name]: value,
+            };
+        });
+    }, []);
+
+    const handleSaveAddress = async () => {
+        if (!addressForm.district || !addressForm.ward || !addressForm.detail.trim()) {
+            setError(isVi ? 'Vui lòng chọn đủ địa chỉ Cần Thơ và nhập chi tiết' : 'Please complete the Can Tho address fields');
+            return;
+        }
+
+        try {
+            setError('');
+            setSavingAddress(true);
+
+            const formattedAddress = formatCanThoAddress(addressForm.detail, addressForm.ward, addressForm.district);
+            await userService.updateProfile({
+                name: user?.name || 'User',
+                phone: user?.phone,
+                address: formattedAddress,
+                avatarUrl: user?.avatarUrl,
+            });
+
+            window.location.reload();
+        } catch (err) {
+            const message = err instanceof Error ? err.message : (isVi ? 'Lỗi khi lưu địa chỉ' : 'Error saving address');
+            setError(message);
+        } finally {
+            setSavingAddress(false);
         }
     };
 
@@ -209,6 +281,10 @@ export const ProfilePage = () => {
                                 <FiUser size={16} />
                                 <span>{isVi ? 'Khách hàng' : 'Customer'}</span>
                             </div>
+                            <div className={styles.addressPreview}>
+                                <strong>{isVi ? 'Địa chỉ' : 'Address'}</strong>
+                                <p>{user?.address || (isVi ? 'Chưa có địa chỉ giao hàng' : 'No shipping address yet')}</p>
+                            </div>
                         </div>
 
                         <div className={styles.profileStats}>
@@ -275,15 +351,61 @@ export const ProfilePage = () => {
                                 </div>
                             </section>
 
-                            {/* <section className={styles.section}>
+                            <section className={styles.section}>
                                 <div className={styles.sectionHeader}>
                                     <h3>{isVi ? 'Địa chỉ giao hàng' : 'Shipping Address'}</h3>
-                                    <button className={styles.editBtn}><FiEdit2 size={16} /> {isVi ? 'Chỉnh sửa' : 'Edit'}</button>
                                 </div>
-                                <div className={styles.emptyMessage}>
-                                    {isVi ? 'Chưa có địa chỉ giao hàng' : 'No shipping address saved'}
+                                <div className={styles.addressCard}>
+                                    <div className={styles.addressSummary}>
+                                        <label>{isVi ? 'Địa chỉ hiện tại' : 'Current address'}</label>
+                                        <p>{user?.address || (isVi ? 'Chưa có địa chỉ giao hàng' : 'No shipping address saved')}</p>
+                                    </div>
+
+                                    <div className={styles.addressFormGrid}>
+                                        <div className={styles.infoField}>
+                                            <label>{isVi ? 'Tỉnh / Thành phố' : 'Province / City'}</label>
+                                            <input value={canThoProvinceLabel} disabled className={styles.readonlyInput} />
+                                        </div>
+
+                                        <div className={styles.infoField}>
+                                            <label>{isVi ? 'Quận / Huyện' : 'District'}</label>
+                                            <select name="district" value={addressForm.district} onChange={handleAddressChange} className={styles.selectInput}>
+                                                <option value="">{isVi ? '-- Chọn quận / huyện --' : '-- Select district --'}</option>
+                                                {canThoDistricts.map((district) => (
+                                                    <option key={district.value} value={district.value}>{district.labelVi}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className={styles.infoField}>
+                                            <label>{isVi ? 'Phường / Xã' : 'Ward / Commune'}</label>
+                                            <select name="ward" value={addressForm.ward} onChange={handleAddressChange} className={styles.selectInput} disabled={!addressForm.district}>
+                                                <option value="">{isVi ? '-- Chọn phường / xã --' : '-- Select ward --'}</option>
+                                                {getCanThoWards(addressForm.district).map((ward) => (
+                                                    <option key={ward.value} value={ward.value}>{ward.labelVi}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className={styles.infoField}>
+                                            <label>{isVi ? 'Chi tiết địa điểm' : 'Detailed address'}</label>
+                                            <input
+                                                name="detail"
+                                                value={addressForm.detail}
+                                                onChange={handleAddressChange}
+                                                className={styles.textInput}
+                                                placeholder={isVi ? 'Số nhà, tên đường, khu vực...' : 'House number, street, area...'}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className={styles.addressActions}>
+                                        <button className={styles.editBtn} onClick={handleSaveAddress} disabled={savingAddress}>
+                                            {savingAddress ? (isVi ? 'Đang lưu...' : 'Saving...') : (isVi ? 'Lưu địa chỉ' : 'Save address')}
+                                        </button>
+                                    </div>
                                 </div>
-                            </section> */}
+                            </section>
                         </div>
                     )}
 

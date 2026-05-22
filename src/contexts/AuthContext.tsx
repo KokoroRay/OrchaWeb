@@ -13,6 +13,7 @@ import {
     handleOAuthCallback,
     type AuthTokens,
 } from '../services/cognitoService';
+import { userService } from '../services/userService';
 
 interface UserInfo {
     email?: string;
@@ -89,6 +90,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [tokens, setTokens] = useState<AuthTokens | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+    const hydrateUserProfile = async (groups: string[]) => {
+        const attrs = await getCurrentUserAttributes();
+
+        let profile = null;
+        try {
+            profile = await userService.getProfile();
+        } catch (error) {
+            console.error('Failed to load backend user profile:', error);
+        }
+
+        if (attrs || profile) {
+            const fallbackName = attrs?.['name'] || attrs?.['email'];
+            setUser({
+                email: profile?.email ?? attrs?.['email'],
+                name: profile?.name ?? fallbackName,
+                sub: profile?.userId ?? attrs?.['sub'],
+                groups,
+                avatarUrl: profile?.avatarUrl ?? attrs?.['picture'],
+                phone: profile?.phone ?? attrs?.['phone_number'],
+                address: profile?.address,
+            });
+        }
+    };
+
     // Check for existing session on mount
     useEffect(() => {
         checkSession();
@@ -110,15 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     const groups = extractGroupsFromToken(oauthTokens.idToken);
                     setIsAdmin(hasAdminGroup(groups));
 
-                    const attrs = await getCurrentUserAttributes();
-                    if (attrs) {
-                        setUser({
-                            email: attrs['email'],
-                            name: attrs['name'] || attrs['email'],
-                            sub: attrs['sub'],
-                            groups,
-                        });
-                    }
+                    await hydrateUserProfile(groups);
 
                     // Clean URL by removing code parameter
                     window.history.replaceState({}, document.title, window.location.pathname);
@@ -137,15 +154,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const groups = extractGroupsFromToken(session.idToken);
                 setIsAdmin(hasAdminGroup(groups));
 
-                const attrs = await getCurrentUserAttributes();
-                if (attrs) {
-                    setUser({
-                        email: attrs['email'],
-                        name: attrs['name'] || attrs['email'],
-                        sub: attrs['sub'],
-                        groups,
-                    });
-                }
+                await hydrateUserProfile(groups);
             }
         } catch {
             // No valid session
@@ -167,15 +176,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const admin = hasAdminGroup(groups);
         setIsAdmin(admin);
 
-        const attrs = await getCurrentUserAttributes();
-        if (attrs) {
-            setUser({
-                email: attrs['email'],
-                name: attrs['name'] || attrs['email'],
-                sub: attrs['sub'],
-                groups,
-            });
-        }
+        await hydrateUserProfile(groups);
 
         return { isAdmin: admin };
     }, []);
