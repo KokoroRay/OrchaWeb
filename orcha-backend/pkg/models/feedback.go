@@ -9,6 +9,7 @@ type Feedback struct {
 	UserName    string `json:"userName" dynamodbav:"userName"`
 	Rating      int    `json:"rating" dynamodbav:"rating"`
 	Comment     string `json:"comment" dynamodbav:"comment"`
+	ImageUrl    string `json:"imageUrl,omitempty" dynamodbav:"imageUrl,omitempty"`
 	CreatedAt   string `json:"createdAt" dynamodbav:"createdAt"`
 }
 
@@ -16,6 +17,7 @@ type CreateFeedbackInput struct {
 	ProductId string `json:"productId"`
 	Rating    int    `json:"rating"`
 	Comment   string `json:"comment"`
+	ImageUrl  string `json:"imageUrl,omitempty"`
 }
 
 func (f *Feedback) SetDefaults() {

@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaStar, FaRegStar, FaImage, FaTimes, FaPaperPlane } from 'react-icons/fa';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { cartService } from '../../services/cartService';
+import { orderService, type ProductFeedback } from '../../services/orderService';
 import { getProductDetailById } from '../../services/productContentService';
+import { uploadImage, type UploadProgress } from '../../services/imageService';
 import type { ProductDetail } from '../../data/productDetailsBackup';
 import styles from './ProductDetailPage.module.css';
 
@@ -21,6 +23,17 @@ export const ProductDetailPage = () => {
     const [quantity, setQuantity] = useState(1);
     const [addingToCart, setAddingToCart] = useState(false);
     const [cartMessage, setCartMessage] = useState('');
+    const [feedbacks, setFeedbacks] = useState<ProductFeedback[]>([]);
+    const [feedbackLoading, setFeedbackLoading] = useState(true);
+    const [feedbackError, setFeedbackError] = useState('');
+    const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+    const [feedbackUploadingImage, setFeedbackUploadingImage] = useState(false);
+    const [feedbackUploadProgress, setFeedbackUploadProgress] = useState(0);
+    const [feedbackForm, setFeedbackForm] = useState({
+        rating: 5,
+        comment: '',
+        imageUrl: '',
+    });
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
         definition: false,
         whyChosen: false,
@@ -43,6 +56,31 @@ export const ProductDetailPage = () => {
 
         void loadProduct();
     }, [productId]);
+
+    useEffect(() => {
+        const loadFeedbacks = async () => {
+            if (!productId) {
+                setFeedbacks([]);
+                setFeedbackLoading(false);
+                return;
+            }
+
+            try {
+                setFeedbackLoading(true);
+                setFeedbackError('');
+                const items = await orderService.getProductFeedback(productId);
+                setFeedbacks(items);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : (isVi ? 'Lỗi khi tải đánh giá' : 'Error loading reviews');
+                setFeedbackError(message);
+                setFeedbacks([]);
+            } finally {
+                setFeedbackLoading(false);
+            }
+        };
+
+        void loadFeedbacks();
+    }, [productId, isVi]);
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -84,6 +122,100 @@ export const ProductDetailPage = () => {
         if (next >= 1) {
             setQuantity(next);
         }
+    };
+
+    const handleFeedbackImageUpload = async (file: File) => {
+        try {
+            setFeedbackError('');
+            setFeedbackUploadingImage(true);
+            setFeedbackUploadProgress(0);
+
+            const result = await uploadImage(file, (progress: UploadProgress) => {
+                setFeedbackUploadProgress(progress.percentage);
+            });
+
+            setFeedbackForm((prev) => ({
+                ...prev,
+                imageUrl: result.secureUrl,
+            }));
+        } catch (error) {
+            const message = error instanceof Error ? error.message : (isVi ? 'Lỗi khi tải ảnh' : 'Error uploading image');
+            setFeedbackError(message);
+        } finally {
+            setFeedbackUploadingImage(false);
+            setFeedbackUploadProgress(0);
+        }
+    };
+
+    const handleFeedbackSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        if (!isAuthenticated) {
+            navigate('/auth');
+            return;
+        }
+
+        if (!productId || !feedbackForm.comment.trim()) {
+            setFeedbackError(isVi ? 'Vui lòng nhập nội dung đánh giá' : 'Please enter a review');
+            return;
+        }
+
+        try {
+            setFeedbackSubmitting(true);
+            setFeedbackError('');
+
+            await orderService.submitFeedback({
+                productId,
+                rating: feedbackForm.rating,
+                comment: feedbackForm.comment.trim(),
+                imageUrl: feedbackForm.imageUrl || undefined,
+            });
+
+            setFeedbackForm({
+                rating: 5,
+                comment: '',
+                imageUrl: '',
+            });
+
+            const updated = await orderService.getProductFeedback(productId);
+            setFeedbacks(updated);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : (isVi ? 'Lỗi khi gửi phản hồi' : 'Error submitting review');
+            setFeedbackError(message);
+        } finally {
+            setFeedbackSubmitting(false);
+        }
+    };
+
+    const formatFeedbackDate = (value: string) => {
+        try {
+            return new Intl.DateTimeFormat(isVi ? 'vi-VN' : 'en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            }).format(new Date(value));
+        } catch {
+            return value;
+        }
+    };
+
+    const renderStarInput = () => {
+        return Array.from({ length: 5 }, (_, index) => {
+            const ratingValue = index + 1;
+            const isActive = ratingValue <= feedbackForm.rating;
+
+            return (
+                <button
+                    key={ratingValue}
+                    type="button"
+                    className={`${styles.starButton} ${isActive ? styles.starButtonActive : ''}`}
+                    onClick={() => setFeedbackForm((prev) => ({ ...prev, rating: ratingValue }))}
+                    aria-label={`${ratingValue} star`}
+                >
+                    {isActive ? <FaStar /> : <FaRegStar />}
+                </button>
+            );
+        });
     };
 
     if (!product || !category) {
@@ -323,6 +455,135 @@ export const ProductDetailPage = () => {
                             </div>
                         </div>
                     )}
+                </div>
+            </section>
+
+            <section className={styles.feedbackSection} id="product-feedback">
+                <div className={styles.sectionHeaderRow}>
+                    <div>
+                        <h2 className={styles.sectionTitle}>{isVi ? 'Đánh giá sản phẩm' : 'Product Reviews'}</h2>
+                        <p className={styles.sectionSubtitle}>
+                            {feedbacks.length > 0
+                                ? (isVi ? `${feedbacks.length} đánh giá từ người dùng` : `${feedbacks.length} reviews from users`)
+                                : (isVi ? 'Chưa có đánh giá nào' : 'No reviews yet')}
+                        </p>
+                    </div>
+                </div>
+
+                <div className={styles.feedbackLayout}>
+                    <div className={styles.feedbackComposer}>
+                        <h3>{isVi ? 'Gửi đánh giá của bạn' : 'Write your review'}</h3>
+                        {isAuthenticated ? (
+                            <form className={styles.feedbackForm} onSubmit={handleFeedbackSubmit}>
+                                <div className={styles.ratingRow}>
+                                    <span>{isVi ? 'Đánh giá:' : 'Rating:'}</span>
+                                    <div className={styles.starGroup}>{renderStarInput()}</div>
+                                </div>
+
+                                <textarea
+                                    className={styles.feedbackTextarea}
+                                    rows={4}
+                                    placeholder={isVi ? 'Chia sẻ cảm nhận của bạn về sản phẩm...' : 'Share your thoughts about this product...'}
+                                    value={feedbackForm.comment}
+                                    onChange={(e) => setFeedbackForm((prev) => ({ ...prev, comment: e.target.value }))}
+                                    disabled={feedbackSubmitting}
+                                />
+
+                                <div className={styles.feedbackImageBox}>
+                                    <div className={styles.feedbackImageHeader}>
+                                        <span>{isVi ? 'Ảnh đính kèm (Cloudinary)' : 'Attached image (Cloudinary)'}</span>
+                                        {feedbackForm.imageUrl && (
+                                            <button
+                                                type="button"
+                                                className={styles.clearImageBtn}
+                                                onClick={() => setFeedbackForm((prev) => ({ ...prev, imageUrl: '' }))}
+                                            >
+                                                <FaTimes />
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {feedbackForm.imageUrl ? (
+                                        <div className={styles.feedbackImagePreview}>
+                                            <img src={feedbackForm.imageUrl} alt="Feedback attachment" />
+                                        </div>
+                                    ) : (
+                                        <label className={styles.feedbackUploadBtn}>
+                                            <FaImage />
+                                            <span>{isVi ? 'Tải ảnh lên' : 'Upload image'}</span>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    await handleFeedbackImageUpload(file);
+                                                    e.target.value = '';
+                                                }}
+                                                hidden
+                                                disabled={feedbackUploadingImage || feedbackSubmitting}
+                                            />
+                                        </label>
+                                    )}
+
+                                    {feedbackUploadingImage && (
+                                        <div className={styles.uploadProgressWrap}>
+                                            <div className={styles.uploadProgressBar}>
+                                                <span style={{ width: `${feedbackUploadProgress}%` }} />
+                                            </div>
+                                            <small>{feedbackUploadProgress}%</small>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <button type="submit" className={styles.feedbackSubmitBtn} disabled={feedbackSubmitting}>
+                                    <FaPaperPlane />
+                                    <span>{feedbackSubmitting ? (isVi ? 'Đang gửi...' : 'Sending...') : (isVi ? 'Gửi đánh giá' : 'Submit review')}</span>
+                                </button>
+                            </form>
+                        ) : (
+                            <div className={styles.feedbackLoginPrompt}>
+                                <p>{isVi ? 'Hãy đăng nhập để gửi đánh giá và hình ảnh.' : 'Log in to leave a review and upload an image.'}</p>
+                                <button className={styles.feedbackLoginBtn} onClick={() => navigate('/auth')}>
+                                    {isVi ? 'Đăng nhập' : 'Log in'}
+                                </button>
+                            </div>
+                        )}
+
+                        {feedbackError && <div className={styles.feedbackError}>{feedbackError}</div>}
+                    </div>
+
+                    <div className={styles.feedbackList}>
+                        {feedbackLoading ? (
+                            <div className={styles.feedbackLoading}>{isVi ? 'Đang tải đánh giá...' : 'Loading reviews...'}</div>
+                        ) : feedbacks.length === 0 ? (
+                            <div className={styles.feedbackEmpty}>{isVi ? 'Sản phẩm này chưa có đánh giá.' : 'This product has no reviews yet.'}</div>
+                        ) : (
+                            feedbacks.map((item) => (
+                                <article key={item.feedbackId} className={styles.feedbackCard}>
+                                    <div className={styles.feedbackCardHeader}>
+                                        <div>
+                                            <strong>{item.userName || 'Anonymous'}</strong>
+                                            <div className={styles.feedbackMeta}>
+                                                {Array.from({ length: 5 }, (_, index) => (
+                                                    index < item.rating ? <FaStar key={index} className={styles.feedbackStarFilled} /> : <FaRegStar key={index} className={styles.feedbackStar} />
+                                                ))}
+                                                <span>{formatFeedbackDate(item.createdAt)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <p className={styles.feedbackComment}>{item.comment}</p>
+
+                                    {item.imageUrl && (
+                                        <div className={styles.feedbackAttachedImage}>
+                                            <img src={item.imageUrl} alt="Feedback attachment" />
+                                        </div>
+                                    )}
+                                </article>
+                            ))
+                        )}
+                    </div>
                 </div>
             </section>
 

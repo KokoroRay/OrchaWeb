@@ -9,13 +9,15 @@ import {
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { orderService, type Order } from '../../services/orderService';
-import { adminService, type AdminCategory, type AdminCategoryInput, type AdminFeedback, type AdminProduct, type AdminProductInput, type AdminUser, type AdminUserRole } from '../../services/adminService';
+import { adminService, type AdminCategory, type AdminCategoryInput, type AdminFeedback, type AdminProduct, type AdminProductInput, type AdminUser } from '../../services/adminService';
 import { uploadImage, type UploadProgress } from '../../services/imageService';
 import logoImage from '../../assets/logos/logo.png';
 import styles from './AdminDashboard.module.css';
 
 type AdminTab = 'overview' | 'categories' | 'products' | 'orders' | 'users' | 'feedback';
 type OrderStatus = Order['status'];
+type OrderPaymentFilter = 'all' | 'COD' | 'PAYOS';
+type OrderSort = 'newest' | 'oldest' | 'amount_desc' | 'amount_asc';
 
 const ORDER_STATUS_SEQUENCE: OrderStatus[] = ['PENDING_PAYMENT', 'PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED'];
 const PRODUCT_FORM_DRAFT_KEY = 'orcha_admin_product_form_draft_v2';
@@ -196,7 +198,13 @@ export const AdminDashboard = () => {
     const [orderStatusDraft, setOrderStatusDraft] = useState<Record<string, OrderStatus>>({});
     const [orderRefundDraft, setOrderRefundDraft] = useState<Record<string, Order['refundStatus']>>({});
     const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
-    const [userDrafts, setUserDrafts] = useState<Record<string, { role: AdminUserRole; isActive: boolean }>>({});
+    const [orderSearch, setOrderSearch] = useState('');
+    const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatus | 'all'>('all');
+    const [orderPaymentFilter, setOrderPaymentFilter] = useState<OrderPaymentFilter>('all');
+    const [orderSort, setOrderSort] = useState<OrderSort>('newest');
+    const [feedbackProductFilter, setFeedbackProductFilter] = useState('all');
+    const [feedbackUserFilter, setFeedbackUserFilter] = useState('all');
+    const [feedbackRatingFilter, setFeedbackRatingFilter] = useState<'all' | '1' | '2' | '3' | '4' | '5'>('all');
 
     useEffect(() => {
         try {
@@ -247,12 +255,6 @@ export const AdminDashboard = () => {
                 }, {})
             );
 
-            setUserDrafts(
-                userData.reduce<Record<string, { role: AdminUserRole; isActive: boolean }>>((acc, item) => {
-                    acc[item.userId] = { role: item.role, isActive: item.isActive };
-                    return acc;
-                }, {})
-            );
         } catch (loadError) {
             const message = loadError instanceof Error ? loadError.message : 'Không thể tải dữ liệu';
             setError(message);
@@ -290,12 +292,98 @@ export const AdminDashboard = () => {
         };
     }, [feedbacks.length, orders, products, users.length]);
 
-    const categoryNameById = useMemo(() => {
-        return categories.reduce<Record<string, string>>((acc, category) => {
-            acc[category.categoryId] = category.name;
-            return acc;
-        }, {});
-    }, [categories]);
+        const categoryNameById = useMemo(() => {
+            return categories.reduce<Record<string, string>>((acc, category) => {
+                acc[category.categoryId] = category.name;
+                return acc;
+            }, {});
+        }, [categories]);
+
+        const productNameById = useMemo(() => {
+            return products.reduce<Record<string, string>>((acc, product) => {
+                acc[product.productId] = product.name;
+                return acc;
+            }, {});
+        }, [products]);
+
+        const filteredOrders = useMemo(() => {
+            const normalizedSearch = orderSearch.trim().toLowerCase();
+
+            const filtered = orders.filter((order) => {
+                const paymentMethod = order.paymentMethod === 'PAYOS' ? 'PAYOS' : 'COD';
+
+                if (orderStatusFilter !== 'all' && order.status !== orderStatusFilter) {
+                    return false;
+                }
+
+                if (orderPaymentFilter !== 'all' && paymentMethod !== orderPaymentFilter) {
+                    return false;
+                }
+
+                if (!normalizedSearch) {
+                    return true;
+                }
+
+                return [order.orderId, order.userName, order.userEmail, order.shippingName, order.shippingPhone, order.shippingAddress]
+                    .some((value) => (value || '').toLowerCase().includes(normalizedSearch));
+            });
+
+            return filtered.sort((left, right) => {
+                const leftDate = new Date(left.createdAt).getTime();
+                const rightDate = new Date(right.createdAt).getTime();
+
+                if (orderSort === 'oldest') return leftDate - rightDate;
+                if (orderSort === 'amount_desc') return right.totalAmount - left.totalAmount;
+                if (orderSort === 'amount_asc') return left.totalAmount - right.totalAmount;
+                return rightDate - leftDate;
+            });
+        }, [orderPaymentFilter, orderSearch, orderSort, orderStatusFilter, orders]);
+
+        const filteredFeedbacks = useMemo(() => {
+            return feedbacks.filter((feedback) => {
+                if (feedbackProductFilter !== 'all' && feedback.productId !== feedbackProductFilter) {
+                    return false;
+                }
+
+                if (feedbackUserFilter !== 'all' && feedback.userId !== feedbackUserFilter) {
+                    return false;
+                }
+
+                if (feedbackRatingFilter !== 'all' && String(feedback.rating) !== feedbackRatingFilter) {
+                    return false;
+                }
+
+                return true;
+            });
+        }, [feedbackProductFilter, feedbackRatingFilter, feedbackUserFilter, feedbacks]);
+
+        const topProductsData = useMemo(() => {
+            const sales = orders.flatMap((order) => order.items.map((item) => ({
+                productId: item.productId,
+                productName: item.productName,
+                quantity: item.quantity,
+                revenue: item.price * item.quantity,
+            })));
+
+            const aggregated = sales.reduce<Record<string, { name: string; count: number; revenue: number }>>((acc, item) => {
+                const current = acc[item.productId] || { name: item.productName, count: 0, revenue: 0 };
+                acc[item.productId] = {
+                    name: current.name,
+                    count: current.count + item.quantity,
+                    revenue: current.revenue + item.revenue,
+                };
+                return acc;
+            }, {});
+
+            return Object.values(aggregated)
+                .sort((left, right) => right.count - left.count || right.revenue - left.revenue)
+                .slice(0, 5)
+                .map((item) => ({
+                    name: item.name.length > 24 ? `${item.name.slice(0, 24)}...` : item.name,
+                    count: item.count,
+                    revenue: Math.round(item.revenue),
+                }));
+        }, [orders]);
 
     const uploadProductImage = async (file: File) => {
         if (!file) {
@@ -587,25 +675,6 @@ export const AdminDashboard = () => {
         }
     };
 
-    const handleUpdateUser = async (userId: string) => {
-        const draft = userDrafts[userId];
-        if (!draft) return;
-
-        setBusyAction(true);
-        setError('');
-
-        try {
-            const updated = await adminService.updateUser(userId, draft);
-            setUsers((prev) => prev.map((item) => (item.userId === userId ? updated : item)));
-            setSuccess(`Đã cập nhật thông tin người dùng`);
-        } catch (updateError) {
-            const message = updateError instanceof Error ? updateError.message : 'Cập nhật thất bại';
-            setError(message);
-        } finally {
-            setBusyAction(false);
-        }
-    };
-
     const handleDeleteFeedback = async (feedbackId: string) => {
         if (!confirm('Bạn có chắc chắn muốn xóa phản hồi này?')) return;
 
@@ -793,26 +862,6 @@ export const AdminDashboard = () => {
             { name: 'Đã giao', value: orders.filter(o => o.status === 'DELIVERED').length, color: '#4caf50' },
             { name: 'Đã hủy', value: orders.filter(o => o.status === 'CANCELLED').length, color: '#f44336' },
         ].filter(item => item.value > 0);
-
-        // Prepare top products data
-        const productSales: Record<string, { name: string; count: number; revenue: number }> = {};
-        orders.forEach((order) => {
-            // For simplicity, we count orders containing each product
-            // In real scenario, would need to track which products are in each order
-            if (order.totalAmount > 0) {
-                products.slice(0, 5).forEach((product) => {
-                    const key = product.productId;
-                    if (!productSales[key]) {
-                        productSales[key] = { name: product.name, count: 0, revenue: 0 };
-                    }
-                    productSales[key].count += 1;
-                    productSales[key].revenue += order.totalAmount / (orders.length || 1);
-                });
-            }
-        });
-        const topProductsData = Object.values(productSales)
-            .slice(0, 5)
-            .map(p => ({ name: p.name.substring(0, 15), count: p.count, revenue: Math.round(p.revenue) }));
 
         return (
             <div className={styles.overviewContainer}>
@@ -1479,6 +1528,36 @@ export const AdminDashboard = () => {
                     <h2 className={styles.sectionTitle}>Quản lý đơn hàng ({orders.length})</h2>
                 </div>
 
+                <div className={styles.filterBar}>
+                    <input
+                        type="text"
+                        className={styles.filterInput}
+                        placeholder="Tìm mã đơn, khách hàng, số điện thoại, địa chỉ..."
+                        value={orderSearch}
+                        onChange={(e) => setOrderSearch(e.target.value)}
+                    />
+                    <select className={styles.filterSelect} value={orderStatusFilter} onChange={(e) => setOrderStatusFilter(e.target.value as OrderStatus | 'all')}>
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="PENDING_PAYMENT">Chờ thanh toán</option>
+                        <option value="PENDING">Chờ xác nhận</option>
+                        <option value="CONFIRMED">Đã xác nhận</option>
+                        <option value="SHIPPING">Đang vận chuyển</option>
+                        <option value="DELIVERED">Đã giao</option>
+                        <option value="CANCELLED">Đã hủy</option>
+                    </select>
+                    <select className={styles.filterSelect} value={orderPaymentFilter} onChange={(e) => setOrderPaymentFilter(e.target.value as OrderPaymentFilter)}>
+                        <option value="all">Tất cả thanh toán</option>
+                        <option value="COD">COD</option>
+                        <option value="PAYOS">PAYOS</option>
+                    </select>
+                    <select className={styles.filterSelect} value={orderSort} onChange={(e) => setOrderSort(e.target.value as OrderSort)}>
+                        <option value="newest">Mới nhất</option>
+                        <option value="oldest">Cũ nhất</option>
+                        <option value="amount_desc">Tổng tiền giảm dần</option>
+                        <option value="amount_asc">Tổng tiền tăng dần</option>
+                    </select>
+                </div>
+
                 <div className={styles.tableContainer}>
                     <table className={styles.dataTable}>
                         <thead>
@@ -1494,7 +1573,7 @@ export const AdminDashboard = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {orders.map((order) => {
+                            {filteredOrders.map((order) => {
                                 const nextStatus = getNextStatus(order.status);
                                 const canUpdateStatus = nextStatus && order.status !== 'CANCELLED' && order.status !== 'DELIVERED';
                                 const canCancel = order.status !== 'CANCELLED' && order.status !== 'DELIVERED';
@@ -1652,73 +1731,33 @@ export const AdminDashboard = () => {
                         <tr>
                             <th>Tên</th>
                             <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Địa chỉ</th>
                             <th>Vai trò</th>
                             <th>Trạng thái</th>
-                            <th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {users.map((userItem) => {
-                            const draft = userDrafts[userItem.userId];
-                            const hasChanges =
-                                draft && (draft.role !== userItem.role || draft.isActive !== userItem.isActive);
-
-                            return (
-                                <tr key={userItem.userId}>
-                                    <td>
-                                        <strong>{userItem.name || 'N/A'}</strong>
-                                    </td>
-                                    <td>{userItem.email}</td>
-                                    <td>
-                                        <select
-                                            className={styles.roleSelect}
-                                            value={draft?.role || userItem.role}
-                                            onChange={(e) =>
-                                                setUserDrafts({
-                                                    ...userDrafts,
-                                                    [userItem.userId]: {
-                                                        ...draft,
-                                                        role: e.target.value as AdminUserRole,
-                                                        isActive: draft?.isActive ?? userItem.isActive,
-                                                    },
-                                                })
-                                            }
-                                        >
-                                            <option value="user">User</option>
-                                            <option value="admin">Admin</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <label className={styles.toggleSwitch}>
-                                            <input
-                                                type="checkbox"
-                                                checked={draft?.isActive ?? userItem.isActive}
-                                                onChange={(e) =>
-                                                    setUserDrafts({
-                                                        ...userDrafts,
-                                                        [userItem.userId]: {
-                                                            role: draft?.role || userItem.role,
-                                                            isActive: e.target.checked,
-                                                        },
-                                                    })
-                                                }
-                                            />
-                                            <span className={styles.toggleSlider}></span>
-                                        </label>
-                                    </td>
-                                    <td>
-                                        {hasChanges && (
-                                            <button
-                                                className={styles.btnSave}
-                                                onClick={() => handleUpdateUser(userItem.userId)}
-                                            >
-                                                <FiSave size={16} />
-                                            </button>
-                                        )}
-                                    </td>
-                                </tr>
-                            );
-                        })}
+                        {users.map((userItem) => (
+                            <tr key={userItem.userId}>
+                                <td>
+                                    <strong>{userItem.name || 'N/A'}</strong>
+                                </td>
+                                <td>{userItem.email}</td>
+                                <td>{userItem.phone || '--'}</td>
+                                <td className={styles.userAddressCell}>{userItem.address || '--'}</td>
+                                <td>
+                                    <span className={userItem.role === 'ADMIN' ? styles.badgeSuccess : styles.badgeCOD}>
+                                        {userItem.role}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span className={userItem.isActive ? styles.badgeSuccess : styles.badgeWarning}>
+                                        {userItem.isActive ? 'Active' : 'Blocked'}
+                                    </span>
+                                </td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
@@ -1731,8 +1770,31 @@ export const AdminDashboard = () => {
                 <h2 className={styles.sectionTitle}>Phản hồi từ khách hàng ({feedbacks.length})</h2>
             </div>
 
+            <div className={styles.filterBar}>
+                <select className={styles.filterSelect} value={feedbackProductFilter} onChange={(e) => setFeedbackProductFilter(e.target.value)}>
+                    <option value="all">Tất cả sản phẩm</option>
+                    {Object.entries(productNameById).map(([productId, name]) => (
+                        <option key={productId} value={productId}>{name}</option>
+                    ))}
+                </select>
+                <select className={styles.filterSelect} value={feedbackUserFilter} onChange={(e) => setFeedbackUserFilter(e.target.value)}>
+                    <option value="all">Tất cả người dùng</option>
+                    {Array.from(new Map(feedbacks.map((item) => [item.userId, item.userName || item.userId]))).map(([userId, name]) => (
+                        <option key={userId} value={userId}>{name}</option>
+                    ))}
+                </select>
+                <select className={styles.filterSelect} value={feedbackRatingFilter} onChange={(e) => setFeedbackRatingFilter(e.target.value as typeof feedbackRatingFilter)}>
+                    <option value="all">Tất cả sao</option>
+                    <option value="5">5 sao</option>
+                    <option value="4">4 sao</option>
+                    <option value="3">3 sao</option>
+                    <option value="2">2 sao</option>
+                    <option value="1">1 sao</option>
+                </select>
+            </div>
+
             <div className={styles.feedbackGrid}>
-                {feedbacks.map((feedback) => (
+                {filteredFeedbacks.map((feedback) => (
                     <div key={feedback.feedbackId} className={styles.feedbackCard}>
                         <div className={styles.feedbackHeader}>
                             <div>
@@ -1740,6 +1802,7 @@ export const AdminDashboard = () => {
                                 <div className={styles.subText}>
                                     {feedback.rating} ⭐ • {formatDateTime(feedback.createdAt)}
                                 </div>
+                                <div className={styles.subText}>{productNameById[feedback.productId] || feedback.productId}</div>
                             </div>
                             <button
                                 className={styles.btnDelete}
@@ -1750,6 +1813,11 @@ export const AdminDashboard = () => {
                             </button>
                         </div>
                         <p className={styles.feedbackComment}>{feedback.comment}</p>
+                        {feedback.imageUrl && (
+                            <div className={styles.feedbackImageWrap}>
+                                <img src={feedback.imageUrl} alt="Feedback attachment" className={styles.feedbackImage} />
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>

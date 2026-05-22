@@ -76,6 +76,7 @@ export interface AdminFeedback {
     userName: string;
     rating: number;
     comment: string;
+    imageUrl?: string;
     createdAt: string;
 }
 

@@ -101,6 +101,12 @@ func createFeedback(ctx context.Context, request events.APIGatewayProxyRequest) 
 		return response.Error(400, "ProductId và rating (1-5) là bắt buộc"), nil
 	}
 
+	input.Comment = strings.TrimSpace(input.Comment)
+	input.ImageUrl = strings.TrimSpace(input.ImageUrl)
+	if input.Comment == "" {
+		return response.Error(400, "Vui lòng nhập nội dung phản hồi"), nil
+	}
+
 	feedback := models.Feedback{
 		FeedbackId: uuid.New().String(),
 		ProductId:  input.ProductId,
@@ -108,6 +114,7 @@ func createFeedback(ctx context.Context, request events.APIGatewayProxyRequest) 
 		UserName:   claims.Name,
 		Rating:     input.Rating,
 		Comment:    input.Comment,
+		ImageUrl:   input.ImageUrl,
 	}
 	feedback.SetDefaults()
 

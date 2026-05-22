@@ -38,10 +38,22 @@ export interface CreateOrderInput {
 }
 
 /** Feedback / Review */
+export interface ProductFeedback {
+    feedbackId: string;
+    productId: string;
+    userId: string;
+    userName: string;
+    rating: number;
+    comment: string;
+    imageUrl?: string;
+    createdAt: string;
+}
+
 export interface CreateFeedbackInput {
     productId: string;
     rating: number; // 1-5
     comment: string;
+    imageUrl?: string;
 }
 
 /**
@@ -88,6 +100,10 @@ export const orderService = {
      */
     async submitFeedback(input: CreateFeedbackInput): Promise<void> {
         return apiRequest<void>('/feedback', 'POST', input);
+    },
+
+    async getProductFeedback(productId: string): Promise<ProductFeedback[]> {
+        return apiRequest<ProductFeedback[]>(`/feedback/product/${productId}`);
     },
 
     /** 

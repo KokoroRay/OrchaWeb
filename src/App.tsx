@@ -128,11 +128,21 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
-          <ChatBox />
+          <ChatBoxVisibilityController />
         </Router>
       </AuthProvider>
     </LanguageProvider>
   );
 }
+
+const ChatBoxVisibilityController = () => {
+  const location = useLocation();
+
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
+
+  return <ChatBox />;
+};
 
 export default App;
