@@ -491,7 +491,7 @@ export const ProductDetailPage = () => {
 
                                 <div className={styles.feedbackImageBox}>
                                     <div className={styles.feedbackImageHeader}>
-                                        <span>{isVi ? 'Ảnh đính kèm (Cloudinary)' : 'Attached image (Cloudinary)'}</span>
+                                        <span>{isVi ? 'Ảnh đính kèm' : 'Attached image'}</span>
                                         {feedbackForm.imageUrl && (
                                             <button
                                                 type="button"
