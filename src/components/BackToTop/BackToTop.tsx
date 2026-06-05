@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { FaChevronUp } from 'react-icons/fa';
 import styles from './BackToTop.module.css';
+import { FiChevronUp } from 'react-icons/fi';
 
 interface BackToTopProps {
     showAfter?: number;
@@ -80,7 +80,7 @@ export const BackToTop = ({
             title="Back to top"
             type="button"
         >
-            <FaChevronUp className={styles.icon} />
+            <FiChevronUp className={styles.icon} />
             <span className={styles.ripple}></span>
         </button>
     );

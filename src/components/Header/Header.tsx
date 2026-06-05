@@ -3,20 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuthContext } from '../../contexts/AuthContext';
 import styles from './Header.module.css';
-import {
-    FaBars,
-    FaTimes,
-    FaHome,
-    FaInfoCircle,
-    FaBoxOpen,
-    FaEnvelope,
-    FaUser,
-    FaSignOutAlt,
-    FaShoppingCart
-} from 'react-icons/fa';
 import { SearchBox } from '../SearchBox';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { cartService } from '../../services/cartService';
+import { FiBox, FiHome, FiInfo, FiLogOut, FiMail, FiMenu, FiShoppingCart, FiUser, FiX } from 'react-icons/fi';
 
 interface HeaderProps {
     logoSrc?: string;
@@ -134,20 +124,20 @@ export const Header = ({ logoSrc }: HeaderProps) => {
     };
 
     const navItems = [
-        { label: t('nav.home'), href: '/', icon: FaHome },
+        { label: t('nav.home'), href: '/', icon: FiHome },
         {
             label: t('nav.products'),
             href: '#products',
-            icon: FaBoxOpen,
+            icon: FiBox,
             hasDropdown: true,
             dropdownItems: [
                 { label: t('nav.products.drinks'), href: '/products/nuoc' },
                 { label: t('nav.products.fertilizers'), href: '/products/phan' },
             ]
         },
-        { label: t('nav.about'), href: '/about', icon: FaInfoCircle },
-        { label: t('nav.faq'), href: '/faq', icon: FaInfoCircle },
-        { label: t('nav.contact'), href: '/contact', icon: FaEnvelope },
+        { label: t('nav.about'), href: '/about', icon: FiInfo },
+        { label: t('nav.faq'), href: '/faq', icon: FiInfo },
+        { label: t('nav.contact'), href: '/contact', icon: FiMail },
     ];
 
     return (
@@ -258,7 +248,7 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                         onClick={() => navigate('/cart')}
                         title="Giỏ hàng"
                     >
-                        <FaShoppingCart size={18} />
+                        <FiShoppingCart size={18} />
                         {cartCount > 0 && (
                             <span className={styles.cartBadge}>{cartCount}</span>
                         )}
@@ -270,7 +260,7 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                     {isAuthenticated && user ? (
                         <div className={styles.userMenu} ref={userDropdownRef} onMouseLeave={() => setIsUserDropdownOpen(false)}>
                             <button className={styles.userAvatar} onMouseEnter={() => setIsUserDropdownOpen(true)}>
-                                <FaUser size={14} />
+                                <FiUser size={14} />
                             </button>
                             {isUserDropdownOpen && (
                                 <div className={styles.userDropdown}>
@@ -282,7 +272,7 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                                         </span>
                                     </div>
                                     <Link to="/profile" className={styles.dropdownItem} onClick={() => setIsUserDropdownOpen(false)}>
-                                        <FaUser size={14} />
+                                        <FiUser size={14} />
                                         <span>{isVi ? 'Tài khoản' : 'Profile'}</span>
                                     </Link>
                                     <button
@@ -290,7 +280,7 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                                         onClick={logout}
                                         style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                                     >
-                                        <FaSignOutAlt size={14} />
+                                        <FiLogOut size={14} />
                                         <span>{isVi ? 'Đăng xuất' : 'Logout'}</span>
                                     </button>
                                 </div>
@@ -298,7 +288,7 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                         </div>
                     ) : (
                         <Link to="/auth" className={styles.loginBtn}>
-                            <FaUser size={14} />
+                            <FiUser size={14} />
                             <span>Đăng nhập</span>
                         </Link>
                     )}
@@ -310,7 +300,7 @@ export const Header = ({ logoSrc }: HeaderProps) => {
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     aria-label="Toggle menu"
                 >
-                    {isMenuOpen ? <FaTimes /> : <FaBars />}
+                    {isMenuOpen ? <FiX /> : <FiMenu />}
                 </button>
 
                 {/* Mobile Navigation */}

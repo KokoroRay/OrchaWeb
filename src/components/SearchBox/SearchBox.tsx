@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { FaSearch, FaTimes } from 'react-icons/fa';
 import styles from './SearchBox.module.css';
+import { FiSearch, FiX } from 'react-icons/fi';
 
 interface SearchBoxProps {
     placeholder?: string;
@@ -73,7 +73,7 @@ export const SearchBox = ({
                 onClick={handleToggle}
                 aria-label="Toggle search"
             >
-                <FaSearch />
+                <FiSearch />
             </button>
 
             {isExpanded && (
@@ -93,11 +93,11 @@ export const SearchBox = ({
                             className={styles.clearButton}
                             aria-label="Clear search"
                         >
-                            <FaTimes />
+                            <FiX />
                         </button>
                     )}
                     <button type="submit" className={styles.submitButton}>
-                        <FaSearch />
+                        <FiSearch />
                     </button>
                 </form>
             )}

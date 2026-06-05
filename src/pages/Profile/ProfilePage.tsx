@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiAlertCircle, FiPackage, FiMail, FiUser, FiLogOut, FiCamera } from 'react-icons/fi';
-import { MdVerified } from 'react-icons/md';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { orderService, type Order } from '../../services/orderService';
@@ -15,6 +13,7 @@ import {
     canThoProvinceLabel,
 } from '../../data/canThoAddressData';
 import styles from './ProfilePage.module.css';
+import { FiAlertCircle, FiArrowLeft, FiCamera, FiCheckCircle, FiLogOut, FiMail, FiPackage, FiUser } from 'react-icons/fi';
 
 const orderStatusLabels: Record<string, { vi: string; en: string; color: string }> = {
     PENDING_PAYMENT: { vi: 'Chờ thanh toán', en: 'Pending Payment', color: '#ff6b6b' },
@@ -267,7 +266,7 @@ export const ProfilePage = () => {
                                 disabled={uploadingAvatar}
                             />
                             <div className={styles.verifyBadge}>
-                                <MdVerified />
+                                <FiCheckCircle />
                             </div>
                         </div>
 

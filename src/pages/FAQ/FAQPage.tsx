@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styles from './FAQPage.module.css';
-import { FaChevronDown, FaChevronUp, FaSearch } from 'react-icons/fa';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { FiChevronDown, FiChevronUp, FiSearch } from 'react-icons/fi';
 
 interface FAQItem {
     id: number;
@@ -111,7 +111,7 @@ export const FAQPage = () => {
 
                 <div className={styles.filters}>
                     <div className={styles.searchBox}>
-                        <FaSearch className={styles.searchIcon} />
+                        <FiSearch className={styles.searchIcon} />
                         <input
                             type="text"
                             placeholder={t('faq.search')}
@@ -155,7 +155,7 @@ export const FAQPage = () => {
                                     aria-expanded={activeId === faq.id}
                                 >
                                     <span>{faq.question}</span>
-                                    {activeId === faq.id ? <FaChevronUp /> : <FaChevronDown />}
+                                    {activeId === faq.id ? <FiChevronUp /> : <FiChevronDown />}
                                 </button>
                                 
                                 <div className={`${styles.faqAnswer} ${

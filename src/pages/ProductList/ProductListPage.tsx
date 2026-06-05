@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { FaLeaf, FaWater, FaSeedling, FaArrowRight } from 'react-icons/fa';
 import { fromRouteCategory, getCatalogProducts, type ProductCardItem } from '../../services/productContentService';
 import styles from './ProductListPage.module.css';
+import { FiArrowRight, FiDroplet, FiSun, FiWind } from 'react-icons/fi';
 
 export const ProductListPage = () => {
     const { category } = useParams<{ category: string }>();
@@ -36,7 +36,7 @@ export const ProductListPage = () => {
                 subtitle: isVi
                     ? 'Khám phá dòng sản phẩm từ nước trái cây lên men và phân vi sinh tự nhiên'
                     : 'Discover fermented fruit drinks and natural microbial fertilizers',
-                icon: FaLeaf,
+                icon: FiWind,
             };
         }
 
@@ -46,7 +46,7 @@ export const ProductListPage = () => {
                 subtitle: isVi
                     ? 'Giải khát tự nhiên từ quá trình lên men trái cây'
                     : 'Natural refreshment from fruit fermentation',
-                icon: FaWater,
+                icon: FiDroplet,
             };
         }
 
@@ -55,7 +55,7 @@ export const ProductListPage = () => {
             subtitle: isVi
                 ? 'Cải tạo đất và nuôi dưỡng cây trồng bền vững'
                 : 'Improving soil and nourishing crops sustainably',
-            icon: FaSeedling,
+            icon: FiSun,
         };
     }, [categoryType, isAllProductsPage, isVi]);
 
@@ -96,7 +96,7 @@ export const ProductListPage = () => {
                             <p className={styles.cardDesc}>{isVi ? product.shortDesc : product.shortDescEn}</p>
                             <span className={styles.cardCta}>
                                 {isVi ? 'Xem chi tiết' : 'View details'}
-                                <FaArrowRight />
+                                <FiArrowRight />
                             </span>
                         </button>
                     ))}
@@ -105,7 +105,7 @@ export const ProductListPage = () => {
 
             <section className={styles.ctaSection}>
                 <div className={styles.ctaContent}>
-                    <FaLeaf className={styles.ctaIcon} />
+                    <FiWind className={styles.ctaIcon} />
                     <h2>{isVi ? 'Cần tư vấn thêm?' : 'Need more info?'}</h2>
                     <p>
                         {isVi

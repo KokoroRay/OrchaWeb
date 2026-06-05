@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styles from './ContactPage.module.css';
-import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaPaperPlane } from 'react-icons/fa';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { FiMail, FiMapPin, FiPhone, FiSend } from 'react-icons/fi';
 
 interface ContactFormData {
     name: string;
@@ -156,7 +156,7 @@ export const ContactPage = () => {
                         <h3>{t('contact.info')}</h3>
                         
                         <div className={styles.contactItem}>
-                            <FaMapMarkerAlt className={styles.icon} />
+                            <FiMapPin className={styles.icon} />
                             <div>
                                 <h4>{t('contact.address')}</h4>
                                 <p>{t('contact.addressDetail')}</p>
@@ -164,7 +164,7 @@ export const ContactPage = () => {
                         </div>
 
                         <div className={styles.contactItem}>
-                            <FaEnvelope className={styles.icon} />
+                            <FiMail className={styles.icon} />
                             <div>
                                 <h4>Email</h4>
                                 <p>contact@orcha.vn</p>
@@ -172,7 +172,7 @@ export const ContactPage = () => {
                         </div>
 
                         <div className={styles.contactItem}>
-                            <FaPhone className={styles.icon} />
+                            <FiPhone className={styles.icon} />
                             <div>
                                 <h4>{t('contact.phoneLabel')}</h4>
                                 <p>+84 123 456 789</p>
@@ -278,7 +278,7 @@ export const ContactPage = () => {
                                     </>
                                 ) : (
                                     <>
-                                        <FaPaperPlane />
+                                        <FiSend />
                                         {t('contact.send')}
                                     </>
                                 )}

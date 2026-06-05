@@ -2,25 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import styles from './AboutBuchaohPage.module.css';
-import {
-  FaLeaf,
-  FaSeedling,
-  FaFlask,
-  FaWater,
-  FaRecycle,
-  FaFireAlt,
-  FaArrowRight,
-  FaBoxOpen,
-  FaBacteria,
-  FaTint,
-  FaThermometerHalf,
-  FaCheckCircle,
-  FaIndustry,
-} from 'react-icons/fa';
+import { FiActivity, FiArrowRight, FiBox, FiCheckCircle, FiCpu, FiDroplet, FiHexagon, FiRefreshCcw, FiSun, FiThermometer, FiWind, FiZap } from 'react-icons/fi';
 
 const processSteps = [
   {
-    icon: FaSeedling,
+    icon: FiSun,
     titleVi: 'Nguyên liệu tự nhiên',
     titleEn: 'Natural Ingredients',
     descVi:
@@ -29,7 +15,7 @@ const processSteps = [
       'Carefully selected fruits, vegetables, and natural agricultural products carrying beneficial native microorganisms on their surface, forming the foundation for biological fermentation.',
   },
   {
-    icon: FaFlask,
+    icon: FiActivity,
     titleVi: 'Lên men vi sinh',
     titleEn: 'Microbial Fermentation',
     descVi:
@@ -38,7 +24,7 @@ const processSteps = [
       'Lactic bacteria, yeast, and biological enzymes thrive in fermentation environment, breaking down complex organics into organic acids, enzymes, and valuable bio-compounds.',
   },
   {
-    icon: FaWater,
+    icon: FiDroplet,
     titleVi: 'Tách nước vi sinh',
     titleEn: 'Extract Fermented Water',
     descVi:
@@ -47,7 +33,7 @@ const processSteps = [
       'After fermentation, the liquid rich in valuable bio-compounds is separated from residue. This water contains beneficial bacteria, enzymes, and natural organic acids.',
   },
   {
-    icon: FaFireAlt,
+    icon: FiZap,
     titleVi: 'Thanh trùng & đóng chai',
     titleEn: 'Pasteurize & Bottle',
     descVi:
@@ -56,7 +42,7 @@ const processSteps = [
       'Fermented water is pasteurized to remove all living microorganisms. This step prevents further fermentation after bottling, enabling long-term storage without chemical preservatives.',
   },
   {
-    icon: FaRecycle,
+    icon: FiRefreshCcw,
     titleVi: 'Tái lên men phần bã',
     titleEn: 'Re-ferment the Residue',
     descVi:
@@ -65,7 +51,7 @@ const processSteps = [
       'Residue is not discarded. It is re-fermented with additional probiotics and water to create organic fertilizer solution rich in dissolved humus.',
   },
   {
-    icon: FaLeaf,
+    icon: FiWind,
     titleVi: 'Tuần hoàn sinh học',
     titleEn: 'Biological Cycle',
     descVi:
@@ -109,7 +95,7 @@ export const AboutBuchaohPage = () => {
       <section className={styles.hero}>
         <div className={`${styles.heroContent} ${styles.animate}`}>
           <div className={styles.heroIcon}>
-            <FaBacteria className={styles.heroIconSpin} />
+            <FiCpu className={styles.heroIconSpin} />
           </div>
           <h1 className={styles.heroTitle}>{t('about.heroTitle')}</h1>
           <p className={styles.heroSubtitle}>
@@ -119,10 +105,10 @@ export const AboutBuchaohPage = () => {
           </p>
           <div className={styles.heroBadges}>
             <div className={styles.heroBadge}>
-              <FaLeaf /> {isVi ? '100% Tự nhiên' : '100% Natural'}
+              <FiWind /> {isVi ? '100% Tự nhiên' : '100% Natural'}
             </div>
             <div className={styles.heroBadge}>
-              <FaRecycle /> {isVi ? 'Không rác thải' : 'Zero Waste'}
+              <FiRefreshCcw /> {isVi ? 'Không rác thải' : 'Zero Waste'}
             </div>
           </div>
         </div>
@@ -150,7 +136,7 @@ export const AboutBuchaohPage = () => {
       <section className={styles.section}>
         <div className={`${styles.sectionContent} ${styles.animate}`}>
           <div className={styles.iconHeader}>
-            <FaBacteria className={styles.sectionIcon} />
+            <FiCpu className={styles.sectionIcon} />
             <h2 className={styles.sectionTitle}>
               {isVi ? 'Men vi sinh và vai trò trong quá trình lên men' : 'Probiotics and Their Role in Fermentation'}
             </h2>
@@ -205,7 +191,7 @@ export const AboutBuchaohPage = () => {
               </div>
               {index < processSteps.length - 1 && (
                 <div className={styles.stepConnector}>
-                  <FaArrowRight />
+                  <FiArrowRight />
                 </div>
               )}
             </div>
@@ -217,7 +203,7 @@ export const AboutBuchaohPage = () => {
         <div className={styles.detailGrid}>
           <div className={`${styles.detailCard} ${styles.animate}`}>
             <div className={styles.detailIcon}>
-              <FaTint />
+              <FiDroplet />
             </div>
             <h3 className={styles.detailTitle}>
               {isVi ? 'Nước vi sinh là gì' : 'What is fermented water?'}
@@ -236,7 +222,7 @@ export const AboutBuchaohPage = () => {
 
           <div className={`${styles.detailCard} ${styles.animate}`}>
             <div className={styles.detailIcon}>
-              <FaRecycle />
+              <FiRefreshCcw />
             </div>
             <h3 className={styles.detailTitle}>
               {isVi ? 'Dung dịch phân vi sinh từ phần cặn' : 'Organic fertilizer from residue'}
@@ -255,7 +241,7 @@ export const AboutBuchaohPage = () => {
 
           <div className={`${styles.detailCard} ${styles.animate}`}>
             <div className={styles.detailIcon}>
-              <FaThermometerHalf />
+              <FiThermometer />
             </div>
             <h3 className={styles.detailTitle}>
               {isVi ? 'Công đoạn thanh trùng và ý nghĩa' : 'Pasteurization and its significance'}
@@ -277,13 +263,13 @@ export const AboutBuchaohPage = () => {
       <section className={styles.section}>
         <div className={`${styles.sectionContent} ${styles.animate}`}>
           <div className={styles.iconHeader}>
-            <FaIndustry className={styles.sectionIcon} />
+            <FiHexagon className={styles.sectionIcon} />
             <h2 className={styles.sectionTitle}>
               {isVi ? 'Mô hình không rác thải trong sản xuất' : 'Zero-waste production model'}
             </h2>
           </div>
           <div className={styles.highlightBox}>
-            <FaCheckCircle className={styles.checkIcon} />
+            <FiCheckCircle className={styles.checkIcon} />
             <p className={styles.paragraph}>
               {isVi
                 ? 'Toàn bộ nguyên liệu đầu vào đều được tận dụng triệt để. Phần nước trở thành sản phẩm sử dụng, phần cặn và bã tiếp tục được khai thác để tạo thành dung dịch phân vi sinh. Quy trình không tạo ra phụ phẩm cần xử lý hay thải bỏ.'
@@ -436,7 +422,7 @@ export const AboutBuchaohPage = () => {
 
       <section className={styles.ctaSection}>
         <div className={`${styles.ctaContent} ${styles.animate}`}>
-          <FaBoxOpen className={styles.ctaIcon} />
+          <FiBox className={styles.ctaIcon} />
           <h2>{isVi ? 'Khám phá sản phẩm' : 'Explore Products'}</h2>
           <p>
             {isVi

@@ -1,9 +1,7 @@
 import styles from './Footer.module.css';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { FiFacebook, FiInstagram, FiMail, FiMapPin, FiMessageCircle, FiPhone, FiYoutube } from 'react-icons/fi';
 // 1. Import các icon cần thiết
-import { FaFacebookF, FaInstagram, FaYoutube } from 'react-icons/fa';
-import { SiZalo } from 'react-icons/si';
-import { MdLocationOn, MdEmail, MdPhone } from 'react-icons/md';
 
 interface FooterProps {
     logoSrc?: string;
@@ -50,15 +48,15 @@ export const Footer = ({ logoSrc }: FooterProps) => {
                         <h4 className={styles.sectionTitle}>{t('footer.contactTitle')}</h4>
                         <ul className={styles.contactList}>
                             <li className={styles.contactItem}>
-                                <span className={styles.contactIcon}><MdLocationOn /></span>
+                                <span className={styles.contactIcon}><FiMapPin /></span>
                                 <span>{t('footer.location')}</span>
                             </li>
                             <li className={styles.contactItem}>
-                                <span className={styles.contactIcon}><MdEmail /></span>
+                                <span className={styles.contactIcon}><FiMail /></span>
                                 <span>{t('footer.email')}</span>
                             </li>
                             <li className={styles.contactItem}>
-                                <span className={styles.contactIcon}><MdPhone /></span>
+                                <span className={styles.contactIcon}><FiPhone /></span>
                                 <span>{t('footer.phone')}</span>
                             </li>
                         </ul>
@@ -69,16 +67,16 @@ export const Footer = ({ logoSrc }: FooterProps) => {
                         <h4 className={styles.sectionTitle}>{t('footer.followUs')}</h4>
                         <div className={styles.socialLinks}>
                             <a href="https://www.facebook.com/share/1AEXvfrQcV/?mibextid=wwXIfr" className={styles.socialLink} aria-label="Facebook">
-                                <span className={styles.socialIcon}><FaFacebookF /></span>
+                                <span className={styles.socialIcon}><FiFacebook /></span>
                             </a>
                             <a href="#" className={styles.socialLink} aria-label="Instagram">
-                                <span className={styles.socialIcon}><FaInstagram /></span>
+                                <span className={styles.socialIcon}><FiInstagram /></span>
                             </a>
                             <a href="#" className={styles.socialLink} aria-label="YouTube">
-                                <span className={styles.socialIcon}><FaYoutube /></span>
+                                <span className={styles.socialIcon}><FiYoutube /></span>
                             </a>
                             <a href="#" className={styles.socialLink} aria-label="Zalo">
-                                <span className={styles.socialIcon}><SiZalo /></span>
+                                <span className={styles.socialIcon}><FiMessageCircle /></span>
                             </a>
                         </div>
                     </div>

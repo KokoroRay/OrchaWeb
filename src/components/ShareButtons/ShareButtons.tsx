@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from './ShareButtons.module.css';
-import { FaFacebookF, FaTwitter, FaLinkedin, FaCopy, FaShare } from 'react-icons/fa';
+import { FiCopy, FiFacebook, FiLinkedin, FiShare2, FiTwitter } from 'react-icons/fi';
 
 interface ShareButtonsProps {
     url?: string;
@@ -63,7 +63,7 @@ export const ShareButtons = ({
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label="Chia sẻ bài viết"
             >
-                <FaShare />
+                <FiShare2 />
                 <span>Chia sẻ</span>
             </button>
 
@@ -74,7 +74,7 @@ export const ShareButtons = ({
                         onClick={() => handleShare('facebook')}
                         aria-label="Chia sẻ lên Facebook"
                     >
-                        <FaFacebookF />
+                        <FiFacebook />
                         <span>Facebook</span>
                     </button>
 
@@ -83,7 +83,7 @@ export const ShareButtons = ({
                         onClick={() => handleShare('twitter')}
                         aria-label="Chia sẻ lên Twitter"
                     >
-                        <FaTwitter />
+                        <FiTwitter />
                         <span>Twitter</span>
                     </button>
 
@@ -92,7 +92,7 @@ export const ShareButtons = ({
                         onClick={() => handleShare('linkedin')}
                         aria-label="Chia sẻ lên LinkedIn"
                     >
-                        <FaLinkedin />
+                        <FiLinkedin />
                         <span>LinkedIn</span>
                     </button>
 
@@ -101,7 +101,7 @@ export const ShareButtons = ({
                         onClick={handleCopyLink}
                         aria-label="Sao chép liên kết"
                     >
-                        <FaCopy />
+                        <FiCopy />
                         <span>{copied ? 'Đã sao chép!' : 'Sao chép link'}</span>
                     </button>
                 </div>
