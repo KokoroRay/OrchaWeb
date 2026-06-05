@@ -90,8 +90,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [tokens, setTokens] = useState<AuthTokens | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const hydrateUserProfile = async (groups: string[]) => {
-        const attrs = await getCurrentUserAttributes();
+    const hydrateUserProfile = async (groups: string[], currentTokens?: AuthTokens | null) => {
+        let attrs: Record<string, any> | null = null;
+        
+        if (currentTokens) {
+            attrs = decodeJwtPayload(currentTokens.idToken);
+        } else {
+            attrs = await getCurrentUserAttributes();
+        }
 
         let profile = null;
         try {
@@ -123,13 +129,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             
             if (event.data?.type === 'OAUTH_SUCCESS') {
                 const oauthTokens = event.data.tokens;
+                
+                try {
+                    const payload = decodeJwtPayload(oauthTokens.idToken);
+                    const username = payload['cognito:username'] || payload['sub'];
+                    const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
+                    if (username && clientId) {
+                        const prefix = `CognitoIdentityServiceProvider.${clientId}`;
+                        localStorage.setItem(`${prefix}.LastAuthUser`, username as string);
+                        localStorage.setItem(`${prefix}.${username}.idToken`, oauthTokens.idToken);
+                        localStorage.setItem(`${prefix}.${username}.accessToken`, oauthTokens.accessToken);
+                        localStorage.setItem(`${prefix}.${username}.refreshToken`, oauthTokens.refreshToken);
+                    }
+                } catch (e) {
+                    console.error('Failed to save session to local storage', e);
+                }
+
                 setTokens(oauthTokens);
                 setIsAuthenticated(true);
                 
                 const groups = extractGroupsFromToken(oauthTokens.idToken);
                 setIsAdmin(hasAdminGroup(groups));
                 
-                await hydrateUserProfile(groups);
+                await hydrateUserProfile(groups, oauthTokens);
             } else if (event.data?.type === 'OAUTH_ERROR') {
                 setError(event.data.error);
             }
@@ -164,13 +186,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 // Exchange authorization code for tokens (main window fallback)
                 try {
                     const oauthTokens = await handleOAuthCallback(authCode);
+                    
+                    try {
+                        const payload = decodeJwtPayload(oauthTokens.idToken);
+                        const username = payload['cognito:username'] || payload['sub'];
+                        const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
+                        if (username && clientId) {
+                            const prefix = `CognitoIdentityServiceProvider.${clientId}`;
+                            localStorage.setItem(`${prefix}.LastAuthUser`, username as string);
+                            localStorage.setItem(`${prefix}.${username}.idToken`, oauthTokens.idToken);
+                            localStorage.setItem(`${prefix}.${username}.accessToken`, oauthTokens.accessToken);
+                            localStorage.setItem(`${prefix}.${username}.refreshToken`, oauthTokens.refreshToken);
+                        }
+                    } catch (e) {
+                        console.error('Failed to save session to local storage', e);
+                    }
+
                     setTokens(oauthTokens);
                     setIsAuthenticated(true);
                     
                     const groups = extractGroupsFromToken(oauthTokens.idToken);
                     setIsAdmin(hasAdminGroup(groups));
 
-                    await hydrateUserProfile(groups);
+                    await hydrateUserProfile(groups, oauthTokens);
 
                     // Clean URL by removing code parameter
                     window.history.replaceState({}, document.title, window.location.pathname);
@@ -193,7 +231,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const groups = extractGroupsFromToken(session.idToken);
                 setIsAdmin(hasAdminGroup(groups));
 
-                await hydrateUserProfile(groups);
+                await hydrateUserProfile(groups, session);
             }
         } catch {
             // No valid session
@@ -215,7 +253,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const admin = hasAdminGroup(groups);
         setIsAdmin(admin);
 
-        await hydrateUserProfile(groups);
+        await hydrateUserProfile(groups, result);
 
         return { isAdmin: admin };
     }, []);
