@@ -117,6 +117,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check for existing session on mount
     useEffect(() => {
         checkSession();
+
+        const handleMessage = async (event: MessageEvent) => {
+            if (event.origin !== window.location.origin) return;
+            
+            if (event.data?.type === 'OAUTH_SUCCESS') {
+                const oauthTokens = event.data.tokens;
+                setTokens(oauthTokens);
+                setIsAuthenticated(true);
+                
+                const groups = extractGroupsFromToken(oauthTokens.idToken);
+                setIsAdmin(hasAdminGroup(groups));
+                
+                await hydrateUserProfile(groups);
+            } else if (event.data?.type === 'OAUTH_ERROR') {
+                setError(event.data.error);
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
     }, []);
 
     const checkSession = async () => {
@@ -124,9 +144,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // First, check if we're returning from OAuth (code parameter in URL)
             const urlParams = new URLSearchParams(window.location.search);
             const authCode = urlParams.get('code');
+            const errorDesc = urlParams.get('error_description');
             
             if (authCode) {
-                // Exchange authorization code for tokens
+                // If we are inside a popup, send tokens to parent and close
+                if (window.opener && window.opener !== window) {
+                    try {
+                        const oauthTokens = await handleOAuthCallback(authCode);
+                        window.opener.postMessage({ type: 'OAUTH_SUCCESS', tokens: oauthTokens }, window.location.origin);
+                        window.close();
+                        return;
+                    } catch (error) {
+                        window.opener.postMessage({ type: 'OAUTH_ERROR', error: error instanceof Error ? error.message : 'Đăng nhập với Google thất bại' }, window.location.origin);
+                        window.close();
+                        return;
+                    }
+                }
+
+                // Exchange authorization code for tokens (main window fallback)
                 try {
                     const oauthTokens = await handleOAuthCallback(authCode);
                     setTokens(oauthTokens);
@@ -144,6 +179,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     console.error('OAuth callback failed:', error);
                     setError(error instanceof Error ? error.message : 'Đăng nhập với Google thất bại');
                 }
+            } else if (errorDesc && window.opener && window.opener !== window) {
+                window.opener.postMessage({ type: 'OAUTH_ERROR', error: errorDesc }, window.location.origin);
+                window.close();
+                return;
             }
 
             // Check for existing Cognito session

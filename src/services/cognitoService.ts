@@ -253,9 +253,15 @@ export const signInWithGoogle = (): void => {
     const clientId = requireEnv('VITE_COGNITO_CLIENT_ID');
     const redirectUri = requireEnv('VITE_COGNITO_REDIRECT_URI');
 
-    // Redirect directly to Google (skips Cognito hosted UI)
     const url = `${domain}/oauth2/authorize?identity_provider=Google&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=email+openid+phone`;
-    window.location.href = url;
+    
+    // Open in a popup window
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.innerWidth - width) / 2;
+    const top = window.screenY + (window.innerHeight - height) / 2;
+    
+    window.open(url, 'GoogleLogin', `width=${width},height=${height},left=${left},top=${top}`);
 };
 
 // ====== HANDLE OAUTH CALLBACK (exchange code for tokens) ======
