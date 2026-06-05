@@ -121,7 +121,7 @@ func createPayOSPayment(ctx context.Context, request events.APIGatewayProxyReque
 		return response.Error(403, "Bạn không có quyền thanh toán đơn hàng này"), nil
 	}
 
-	if order.Status != models.OrderPending {
+	if order.Status != models.OrderPendingPayment {
 		return response.Error(400, "Đơn hàng không ở trạng thái chờ thanh toán"), nil
 	}
 
