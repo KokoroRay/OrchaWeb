@@ -90,7 +90,7 @@ export const paymentService = {
             {
                 orderId: paymentInfo.orderId,
                 amount: paymentInfo.amount,
-                description: `Thanh toán đơn hàng ${paymentInfo.orderId}`,
+                description: '',
                 returnUrl: `${window.location.origin}/orders/${paymentInfo.orderId}?payment=success`,
                 cancelUrl: `${window.location.origin}/orders/${paymentInfo.orderId}?payment=cancelled`,
                 buyerName: paymentInfo.customerName,

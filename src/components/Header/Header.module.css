@@ -249,7 +249,8 @@
 .userDropdown {
     position: absolute;
     top: calc(100% + 8px);
-    right: -10px;
+    left: 50%;
+    transform: translateX(-50%);
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
@@ -259,7 +260,7 @@
     z-index: 1200;
     border: 1px solid rgba(239, 120, 154, 0.15);
     animation: dropdownSlide 0.2s ease-out;
-    transform-origin: top right;
+    transform-origin: top center;
 }
 
 .userDropdown::before {
@@ -275,11 +276,11 @@
 @keyframes dropdownSlide {
     from {
         opacity: 0;
-        transform: translateY(-10px) scale(0.95);
+        transform: translate(-50%, -10px) scale(0.95);
     }
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translate(-50%, 0) scale(1);
     }
 }
 

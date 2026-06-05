@@ -79,6 +79,11 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		id := request.PathParameters["id"]
 		return cancelOrder(ctx, id, request)
 
+	// POST /orders/{id}/switch-to-cod - Switch to COD
+	case method == "POST" && strings.HasPrefix(path, "/orders/") && strings.HasSuffix(path, "/switch-to-cod"):
+		id := request.PathParameters["id"]
+		return switchToCOD(ctx, id, request)
+
 	// GET /admin/orders
 	case method == "GET" && path == "/admin/orders":
 		if !auth.IsAdmin(request) {
@@ -739,6 +744,68 @@ func cancelOrder(ctx context.Context, id string, request events.APIGatewayProxyR
 	}
 
 	attributevalue.UnmarshalMap(result.Attributes, &order)
+
+	return response.Success(200, order), nil
+}
+
+// Chuyển phương thức thanh toán sang COD cho đơn PENDING_PAYMENT
+func switchToCOD(ctx context.Context, id string, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	claims := auth.ExtractClaims(request)
+	if claims.Sub == "" {
+		return response.Error(401, "Unauthorized"), nil
+	}
+
+	client := db.GetClient()
+
+	// 1. Get the order
+	getResult, err := client.GetItem(ctx, &dynamodb.GetItemInput{
+		TableName: aws.String(ordersTable),
+		Key: map[string]types.AttributeValue{
+			"orderId": &types.AttributeValueMemberS{Value: id},
+		},
+	})
+	if err != nil {
+		return response.Error(500, "Lỗi khi kiểm tra đơn hàng"), nil
+	}
+	if getResult.Item == nil {
+		return response.Error(404, "Không tìm thấy đơn hàng"), nil
+	}
+
+	var order models.Order
+	attributevalue.UnmarshalMap(getResult.Item, &order)
+
+	// 2. Validate permissions & status
+	if order.UserId != claims.Sub {
+		return response.Error(403, "Forbidden"), nil
+	}
+	if order.Status != models.OrderPendingPayment || order.PaymentMethod != models.PaymentPayOS {
+		return response.Error(400, "Không thể chuyển phương thức thanh toán cho đơn hàng này"), nil
+	}
+
+	// 3. Update order
+	now := time.Now().UTC().Format(time.RFC3339)
+	updateResult, err := client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String(ordersTable),
+		Key: map[string]types.AttributeValue{
+			"orderId": &types.AttributeValueMemberS{Value: id},
+		},
+		UpdateExpression: aws.String("SET #status = :status, paymentMethod = :pm, updatedAt = :updated"),
+		ExpressionAttributeNames: map[string]string{
+			"#status": "status",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":status":  &types.AttributeValueMemberS{Value: string(models.OrderPending)},
+			":pm":      &types.AttributeValueMemberS{Value: string(models.PaymentCOD)},
+			":updated": &types.AttributeValueMemberS{Value: now},
+		},
+		ReturnValues: types.ReturnValueAllNew,
+	})
+
+	if err != nil {
+		return response.Error(500, "Lỗi khi cập nhật đơn hàng"), nil
+	}
+
+	attributevalue.UnmarshalMap(updateResult.Attributes, &order)
 
 	return response.Success(200, order), nil
 }

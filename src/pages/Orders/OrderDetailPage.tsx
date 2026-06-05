@@ -4,6 +4,7 @@ import { FiArrowLeft, FiAlertCircle, FiPackage, FiCheckCircle, FiXCircle } from 
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { orderService, type Order } from '../../services/orderService';
+import { paymentService, type PaymentMethod } from '../../services/paymentService';
 import styles from './OrderDetailPage.module.css';
 
 const orderStatusLabels: Record<string, { vi: string; en: string; color: string }> = {
@@ -31,6 +32,7 @@ export const OrderDetailPage = () => {
     const [paymentStatus, setPaymentStatus] = useState<'success' | 'cancelled' | null>(null);
     const [paymentMessage, setPaymentMessage] = useState('');
     const [verifyingPayment, setVerifyingPayment] = useState(false);
+    const [processingPayment, setProcessingPayment] = useState(false);
 
     // Check for payment callback parameters
     useEffect(() => {
@@ -401,6 +403,58 @@ export const OrderDetailPage = () => {
 
                 {/* Actions */}
                 <div className={styles.actions}>
+                    {order.status === 'PENDING_PAYMENT' && order.paymentMethod === 'PAYOS' && (
+                        <div className={styles.paymentRetryActions} style={{ width: '100%', display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                            <button 
+                                className={styles.primaryBtn} 
+                                onClick={async () => {
+                                    try {
+                                        setProcessingPayment(true);
+                                        const paymentInfo = {
+                                            method: 'PAYOS' as PaymentMethod,
+                                            amount: order.totalAmount,
+                                            orderId: order.orderId,
+                                            customerName: order.shippingName,
+                                            customerPhone: order.shippingPhone,
+                                            customerAddress: order.shippingAddress,
+                                        };
+                                        const paymentResponse = await paymentService.createPayOSPayment(paymentInfo);
+                                        window.location.href = paymentResponse.paymentUrl;
+                                    } catch (err) {
+                                        alert(isVi ? 'Không thể tạo lại link thanh toán' : 'Could not create payment link');
+                                    } finally {
+                                        setProcessingPayment(false);
+                                    }
+                                }} 
+                                disabled={processingPayment}
+                                style={{ flex: 1 }}
+                            >
+                                {isVi ? 'Thanh toán lại bằng PayOS' : 'Retry PayOS Payment'}
+                            </button>
+                            <button 
+                                className={styles.secondaryBtn} 
+                                onClick={async () => {
+                                    if (window.confirm(isVi ? 'Bạn có chắc muốn chuyển sang thanh toán khi nhận hàng (COD)?' : 'Are you sure you want to switch to Cash on Delivery?')) {
+                                        try {
+                                            setProcessingPayment(true);
+                                            await orderService.switchToCOD(order.orderId);
+                                            // Refresh order data
+                                            const updated = await orderService.getById(order.orderId);
+                                            setOrder(updated);
+                                        } catch (err) {
+                                            alert(isVi ? 'Không thể chuyển sang COD' : 'Could not switch to COD');
+                                        } finally {
+                                            setProcessingPayment(false);
+                                        }
+                                    }
+                                }} 
+                                disabled={processingPayment}
+                                style={{ flex: 1 }}
+                            >
+                                {isVi ? 'Chuyển sang thanh toán COD' : 'Switch to COD'}
+                            </button>
+                        </div>
+                    )}
                     <button className={styles.primaryBtn} onClick={() => navigate('/products')}>
                         {isVi ? 'Tiếp tục mua sắm' : 'Continue Shopping'}
                     </button>

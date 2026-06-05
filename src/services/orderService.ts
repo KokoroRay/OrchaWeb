@@ -89,6 +89,13 @@ export const orderService = {
     },
 
     /** 
+     * Đổi phương thức thanh toán sang COD cho đơn hàng đang chờ thanh toán
+     */
+    async switchToCOD(orderId: string): Promise<Order> {
+        return apiRequest<Order>(`/orders/${orderId}/switch-to-cod`, 'POST');
+    },
+
+    /** 
      * Hủy đơn hàng (payment failed hoặc user cancel)
      */
     async cancel(orderId: string): Promise<Order> {
