@@ -266,6 +266,11 @@ func createOrder(ctx context.Context, request events.APIGatewayProxyRequest) (ev
 		fmt.Printf("sendOrderNotification error: %v\n", err)
 	}
 
+	// 5. Send HTML confirmation email to the customer
+	if err := sendCustomerOrderConfirmation(ctx, order); err != nil {
+		fmt.Printf("sendCustomerOrderConfirmation error: %v\n", err)
+	}
+
 	return response.Success(201, order), nil
 }
 
@@ -323,6 +328,113 @@ Link chi tiet don: %s
 			Subject: &sestypes.Content{Data: aws.String(subject)},
 			Body: &sestypes.Body{
 				Text: &sestypes.Content{Data: aws.String(body)},
+			},
+		},
+	})
+
+	return err
+}
+
+func sendCustomerOrderConfirmation(ctx context.Context, order models.Order) error {
+	if adminEmail == "" || order.UserEmail == "" {
+		return nil
+	}
+
+	subject := fmt.Sprintf("Xác nhận đơn hàng #%s từ BUCHAOH", order.OrderId[:8])
+
+	var itemsHtml string
+	for _, item := range order.Items {
+		itemsHtml += fmt.Sprintf(`
+		<tr>
+			<td style="padding: 10px; border-bottom: 1px solid #eee;">
+				<div style="font-weight: bold; color: #333;">%s</div>
+			</td>
+			<td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">%d</td>
+			<td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">%.0fđ</td>
+			<td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">%.0fđ</td>
+		</tr>`, item.ProductName, item.Quantity, item.Price, item.Price*float64(item.Quantity))
+	}
+
+	orderURL := "(khong cau hinh FRONTEND_URL)"
+	if frontendURL != "" {
+		orderURL = strings.TrimRight(frontendURL, "/") + "/orders/" + order.OrderId
+	}
+
+	htmlBody := fmt.Sprintf(`
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	</head>
+	<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f9f9f9;">
+		<div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px;">
+			<!-- Header -->
+			<div style="background: linear-gradient(135deg, #fcdce4, #ef789a); padding: 30px 20px; text-align: center;">
+				<h1 style="color: #ffffff; margin: 0; font-size: 28px; letter-spacing: 1px;">BUCHAOH</h1>
+				<p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Từ trái cây tự nhiên đến giải pháp sức khỏe</p>
+			</div>
+			
+			<!-- Content -->
+			<div style="padding: 30px;">
+				<h2 style="color: #333; margin-top: 0;">Cảm ơn bạn đã đặt hàng, %s!</h2>
+				<p style="color: #666; line-height: 1.6;">Đơn hàng <strong>#%s</strong> của bạn đã được tiếp nhận và đang trong quá trình xử lý. Dưới đây là thông tin chi tiết đơn hàng của bạn.</p>
+				
+				<!-- Order Details -->
+				<div style="background-color: #fdf2f5; border-radius: 8px; padding: 20px; margin: 25px 0;">
+					<h3 style="color: #ef789a; margin-top: 0; font-size: 16px;">Thông tin giao hàng</h3>
+					<p style="margin: 5px 0; color: #444;"><strong>Người nhận:</strong> %s</p>
+					<p style="margin: 5px 0; color: #444;"><strong>Số điện thoại:</strong> %s</p>
+					<p style="margin: 5px 0; color: #444;"><strong>Địa chỉ:</strong> %s</p>
+					<p style="margin: 5px 0; color: #444;"><strong>Phương thức:</strong> %s</p>
+				</div>
+				
+				<!-- Items -->
+				<table style="width: 100%%; border-collapse: collapse; margin-top: 20px;">
+					<thead>
+						<tr>
+							<th style="padding: 10px; border-bottom: 2px solid #ef789a; text-align: left; color: #333;">Sản phẩm</th>
+							<th style="padding: 10px; border-bottom: 2px solid #ef789a; text-align: center; color: #333;">SL</th>
+							<th style="padding: 10px; border-bottom: 2px solid #ef789a; text-align: right; color: #333;">Đơn giá</th>
+							<th style="padding: 10px; border-bottom: 2px solid #ef789a; text-align: right; color: #333;">Tổng</th>
+						</tr>
+					</thead>
+					<tbody>
+						%s
+					</tbody>
+					<tfoot>
+						<tr>
+							<td colspan="3" style="padding: 15px 10px; text-align: right; font-weight: bold; color: #333;">Tổng thanh toán:</td>
+							<td style="padding: 15px 10px; text-align: right; font-weight: bold; color: #ef789a; font-size: 18px;">%.0fđ</td>
+						</tr>
+					</tfoot>
+				</table>
+				
+				<!-- CTA -->
+				<div style="text-align: center; margin-top: 30px;">
+					<a href="%s" style="display: inline-block; padding: 12px 30px; background-color: #ef789a; color: #ffffff; text-decoration: none; border-radius: 25px; font-weight: bold; font-size: 16px; transition: background-color 0.3s;">Xem Chi Tiết Đơn Hàng</a>
+				</div>
+			</div>
+			
+			<!-- Footer -->
+			<div style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 12px; color: #888;">
+				<p style="margin: 0;">Trường Đại học FPT Cần Thơ, 600 Nguyễn Văn Cừ, Cần Thơ</p>
+				<p style="margin: 5px 0 0 0;">&copy; 2026 BUCHAOH. All rights reserved.</p>
+			</div>
+		</div>
+	</body>
+	</html>
+	`, order.UserName, order.OrderId[:8], order.ShippingName, order.ShippingPhone, order.ShippingAddr, order.PaymentMethod, itemsHtml, order.TotalAmount, orderURL)
+
+	_, err := sesClient.SendEmail(ctx, &ses.SendEmailInput{
+		Source: aws.String(adminEmail),
+		Destination: &sestypes.Destination{
+			ToAddresses: []string{order.UserEmail},
+		},
+		Message: &sestypes.Message{
+			Subject: &sestypes.Content{Data: aws.String(subject)},
+			Body: &sestypes.Body{
+				Html: &sestypes.Content{Data: aws.String(htmlBody)},
 			},
 		},
 	})

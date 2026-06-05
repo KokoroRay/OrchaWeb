@@ -8,7 +8,7 @@ import { getProductDetailById } from '../../services/productContentService';
 import { uploadImage, type UploadProgress } from '../../services/imageService';
 import type { ProductDetail } from '../../data/productDetailsBackup';
 import styles from './ProductDetailPage.module.css';
-import { FiArrowLeft, FiImage, FiSend, FiStar, FiX, FiPackage, FiCalendar, FiArchive, FiShoppingCart, FiCreditCard, FiPhoneCall } from 'react-icons/fi';
+import { FiArrowLeft, FiImage, FiSend, FiStar, FiX, FiPackage, FiCalendar, FiArchive, FiShoppingCart, FiCreditCard, FiPhoneCall, FiInfo, FiActivity, FiDroplet, FiSun, FiRefreshCcw, FiShield, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
 export const ProductDetailPage = () => {
     const { category, productId } = useParams<{ category: string; productId: string }>();
@@ -36,11 +36,11 @@ export const ProductDetailPage = () => {
     });
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
         definition: false,
-        whyChosen: false,
+        role: false,
+        water: false,
+        fertilizer: false,
         circular: false,
-        process: false,
-        fermentation: false,
-        healthBenefits: false,
+        kombucha: false,
     });
 
     useEffect(() => {
@@ -561,55 +561,62 @@ export const ProductDetailPage = () => {
 
             <section className={styles.educationSection}>
                 <h2 className={styles.sectionTitle}>{isVi ? 'Tìm Hiểu Thêm' : 'Learn More'}</h2>
-
-                <div className={styles.educationCard}>
-                    <button className={styles.educationCardHeader} onClick={() => toggleSection('definition')}>
-                        <span>{isVi ? 'Sản Phẩm Này Là Gì?' : 'What is this product?'}</span>
-                        <span className={styles.chevron}>{expandedSections.definition ? '▼' : '▶'}</span>
-                    </button>
-                    {expandedSections.definition && <div className={styles.educationCardBody}><p>{isVi ? product.definition : product.definitionEn}</p></div>}
-                </div>
-
-                <div className={styles.educationCard}>
-                    <button className={styles.educationCardHeader} onClick={() => toggleSection('whyChosen')}>
-                        <span>{isVi ? 'Tại Sao Chọn Nguyên Liệu Này?' : 'Why these ingredients?'}</span>
-                        <span className={styles.chevron}>{expandedSections.whyChosen ? '▼' : '▶'}</span>
-                    </button>
-                    {expandedSections.whyChosen && <div className={styles.educationCardBody}><p>{isVi ? product.whyChosen : product.whyChosenEn}</p></div>}
-                </div>
-
-                <div className={styles.educationCard}>
-                    <button className={styles.educationCardHeader} onClick={() => toggleSection('fermentation')}>
-                        <span>{isVi ? 'Quá Trình Lên Men' : 'Fermentation Process'}</span>
-                        <span className={styles.chevron}>{expandedSections.fermentation ? '▼' : '▶'}</span>
-                    </button>
-                    {expandedSections.fermentation && <div className={styles.educationCardBody}><p>{isVi ? product.fermentationExplanation : product.fermentationExplanationEn}</p></div>}
-                </div>
-
-                <div className={styles.educationCard}>
-                    <button className={styles.educationCardHeader} onClick={() => toggleSection('process')}>
-                        <span>{isVi ? 'Quy Trình Sản Xuất' : 'Production Process'}</span>
-                        <span className={styles.chevron}>{expandedSections.process ? '▼' : '▶'}</span>
-                    </button>
-                    {expandedSections.process && <div className={styles.educationCardBody}><p>{isVi ? product.processDescription : product.processDescriptionEn}</p></div>}
-                </div>
-
-                <div className={styles.educationCard}>
-                    <button className={styles.educationCardHeader} onClick={() => toggleSection('circular')}>
-                        <span>{isVi ? 'Kinh Tế Tuần Hoàn' : 'Circular Economy'}</span>
-                        <span className={styles.chevron}>{expandedSections.circular ? '▼' : '▶'}</span>
-                    </button>
-                    {expandedSections.circular && (
-                        <div className={styles.educationCardBody}>
-                            <p><strong>{isVi ? 'Đầu Vào:' : 'Input:'}</strong> {isVi ? product.circularInput : product.circularInputEn}</p>
-                            <ul>
-                                {(isVi ? product.circularOutput : product.circularOutputEn).map((item, idx) => (
-                                    <li key={idx}>{item}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                </div>
+                
+                {[
+                    {
+                        id: 'definition',
+                        title: isVi ? 'Sản Phẩm Này Là Gì?' : 'What is this product?',
+                        content: isVi ? product.definition || 'Sản phẩm men vi sinh được tạo ra từ quá trình lên men các loại trái cây, củ quả và nông sản tự nhiên. Thông qua hoạt động của hệ vi sinh vật có lợi, các chất hữu cơ trong nguyên liệu được phân giải và chuyển hóa thành các hợp chất sinh học có giá trị. Kết quả tạo ra hai thành phẩm chính gồm nước vi sinh (cho con người) và dung dịch phân vi sinh (cải tạo đất).' : product.definitionEn || 'Probiotic products are created through the fermentation of natural fruits and vegetables. Beneficial microorganisms break down organic matter into valuable biological compounds, producing probiotic water (for humans) and bio-fertilizer (for soil improvement).',
+                        icon: <FiInfo size={24} />
+                    },
+                    {
+                        id: 'role',
+                        title: isVi ? 'Tại Sao Chọn Nguyên Liệu Này?' : 'Why these ingredients?',
+                        content: isVi ? product.whyChosen || 'Men vi sinh là tập hợp các vi sinh vật có lợi như vi khuẩn lactic, nấm men và các enzyme sinh học tồn tại tự nhiên. Chúng phân giải các chất hữu cơ phức tạp thành dạng đơn giản hơn, làm gia tăng giá trị sinh học và tạo ra các acid hữu cơ, enzyme có lợi.' : product.whyChosenEn || 'Probiotics consist of beneficial microorganisms like lactic acid bacteria, yeast, and natural enzymes. They break down complex organic substances into simpler forms, increasing biological value and producing beneficial organic acids and enzymes.',
+                        icon: <FiActivity size={24} />
+                    },
+                    {
+                        id: 'water',
+                        title: isVi ? 'Quy Trình Lên Men & Sản Xuất' : 'Fermentation & Production',
+                        content: isVi ? product.processDescription || 'Là phần nước thu được sau lên men chứa lợi khuẩn, enzyme và acid hữu cơ. Sản phẩm được thanh trùng để loại bỏ vi sinh vật sống, giúp bảo quản lâu dài ở điều kiện thường mà không cần chất bảo quản hóa học, đồng thời giữ nguyên các hợp chất sinh học.' : product.processDescriptionEn || 'The liquid obtained after fermentation contains probiotics, enzymes, and organic acids. The product is pasteurized to remove live microorganisms, allowing for long-term storage at room temperature without chemical preservatives while retaining biological compounds.',
+                        icon: <FiDroplet size={24} />
+                    },
+                    {
+                        id: 'fertilizer',
+                        title: isVi ? 'Dung dịch phân vi sinh' : 'Bio-fertilizer Solution',
+                        content: isVi ? product.fermentationExplanation || 'Sau khi tách nước, phần cặn và bã nông sản tiếp tục được bổ sung men vi sinh và nước để lên men lần tiếp theo, tạo thành dung dịch giàu mùn hữu cơ hòa tan. Dùng để tưới đất, tăng độ tơi xốp, hỗ trợ hệ rễ và hạn chế nấm bệnh.' : product.fermentationExplanationEn || 'After separating the liquid, the remaining agricultural pulp is supplemented with probiotics and water for further fermentation, creating a solution rich in soluble organic humus. It is used to water soil, increasing aeration, supporting root systems, and reducing plant diseases.',
+                        icon: <FiSun size={24} />
+                    },
+                    {
+                        id: 'circular',
+                        title: isVi ? 'Kinh Tế Tuần Hoàn' : 'Circular Economy',
+                        content: isVi ? (product.circularInput ? `Đầu Vào: ${product.circularInput}. Đầu Ra: ${product.circularOutput.join(', ')}` : 'Nguyên liệu đầu vào là trái cây, củ quả. Nước thu được thành đồ uống. Bã và cặn tạo phân vi sinh nuôi dưỡng cây trồng mới. Quy trình khép kín hoàn toàn không tạo ra chất thải hữu cơ ra môi trường (Zero Waste).') : (product.circularInputEn ? `Input: ${product.circularInputEn}. Output: ${product.circularOutputEn.join(', ')}` : 'Inputs are fruits and vegetables. The liquid becomes a beverage. Pulp and residue create bio-fertilizer to nourish new crops. The fully closed-loop process generates no organic waste to the environment (Zero Waste).'),
+                        icon: <FiRefreshCcw size={24} />
+                    },
+                    {
+                        id: 'kombucha',
+                        title: isVi ? 'Khác biệt với Kombucha' : 'Difference from Kombucha',
+                        content: isVi ? 'Kombucha lên men từ trà và đường dùng nấm SCOBY, thường có gas, vị chua gắt và còn vi sinh vật sống. Sản phẩm của chúng tôi lên men từ trái cây nguyên chất, sử dụng chủng vi sinh linh hoạt, được thanh trùng để ổn định, vị chua thanh và ứng dụng mô hình Zero Waste để tái chế bã.' : 'Kombucha is fermented from tea and sugar using a SCOBY, typically carbonated with a sharp sour taste and live microorganisms. Our product is fermented from pure fruits using flexible microbial strains, pasteurized for stability, with a mild sour taste, applying a Zero Waste model to recycle pulp.',
+                        icon: <FiShield size={24} />
+                    }
+                ].map((item) => (
+                    <div key={item.id} className={styles.educationCard}>
+                        <button className={styles.educationCardHeader} onClick={() => toggleSection(item.id)}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{ color: 'var(--primary)', display: 'flex' }}>{item.icon}</span>
+                                <span>{item.title}</span>
+                            </div>
+                            <span className={styles.chevron}>
+                                {expandedSections[item.id] ? <FiChevronUp size={20} /> : <FiChevronDown size={20} />}
+                            </span>
+                        </button>
+                        {expandedSections[item.id] && (
+                            <div className={styles.educationCardBody}>
+                                <p>{item.content}</p>
+                            </div>
+                        )}
+                    </div>
+                ))}
             </section>
 
             <section className={styles.disclaimerSection}>
