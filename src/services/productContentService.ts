@@ -24,11 +24,18 @@ const formatPrice = (value: number) => {
     }).format(value);
 };
 
-const inferKind = (product: Pick<AdminProduct, 'category' | 'productId'>): ProductKind => {
+const inferKind = (product: Pick<AdminProduct, 'category' | 'productId' | 'name'>): ProductKind => {
     const category = (product.category || '').toLowerCase();
     const id = (product.productId || '').toLowerCase();
+    const name = (product.name || '').toLowerCase();
 
-    if (category.includes('phan') || category.includes('fert') || id.startsWith('phan-')) {
+    if (
+        category.includes('phan') || 
+        category.includes('fert') || 
+        id.startsWith('phan-') ||
+        name.includes('phân') ||
+        name.includes('phan')
+    ) {
         return 'fertilizer';
     }
 

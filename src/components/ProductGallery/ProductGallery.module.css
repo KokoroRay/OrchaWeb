@@ -83,50 +83,33 @@
 /* Carousel Styles */
 .carouselWrapper {
     position: relative;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     margin-bottom: 3rem;
     height: 520px;
     border-radius: 20px;
     box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.05);
+    scroll-behavior: auto; /* Required for JS jump */
+    /* hide scrollbar */
+    scrollbar-width: none;
+    cursor: grab;
 }
 
-.carouselWrapper::before,
-.carouselWrapper::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 100px;
-    z-index: 10;
-    pointer-events: none;
+.carouselWrapper::-webkit-scrollbar {
+    display: none;
 }
 
-.carouselWrapper::before {
-    left: 0;
-    background: linear-gradient(to right, 
-        rgba(248, 250, 252, 1) 0%, 
-        rgba(248, 250, 252, 0.8) 30%,
-        rgba(248, 250, 252, 0) 100%);
+.carouselWrapper:active {
+    cursor: grabbing;
 }
 
-.carouselWrapper::after {
-    right: 0;
-    background: linear-gradient(to left, 
-        rgba(248, 250, 252, 1) 0%, 
-        rgba(248, 250, 252, 0.8) 30%,
-        rgba(248, 250, 252, 0) 100%);
-}
+/* Removed gradient pseudo-elements because they scroll with the container and cause visual bugs */
 
 .carouselTrack {
     display: flex;
     gap: 2rem;
-    animation: scroll-left 12s linear infinite;
     width: max-content;
-    will-change: transform;
-}
-
-.carouselTrack:hover {
-    animation-play-state: paused;
+    padding-right: 2rem;
 }
 
 .productCard {

@@ -29,9 +29,16 @@ export const ProductGallery = () => {
     const isVi = language === 'vi';
     const navigate = useNavigate();
     const carouselRef = useRef<HTMLDivElement>(null);
+    const wrapperRef = useRef<HTMLDivElement>(null);
 
     const [products, setProducts] = useState<ProductCardItem[]>([]);
     const [activeFilter, setActiveFilter] = useState<'all' | 'drink' | 'fertilizer'>('all');
+
+    // Drag and scroll state
+    const isDragging = useRef(false);
+    const startX = useRef(0);
+    const scrollLeft = useRef(0);
+    const isPaused = useRef(false);
 
     useEffect(() => {
         const loadProducts = async () => {
@@ -51,7 +58,83 @@ export const ProductGallery = () => {
         return [...filteredProducts, ...filteredProducts, ...filteredProducts];
     }, [filteredProducts]);
 
+    // Auto scroll and infinite loop logic
+    useEffect(() => {
+        const wrapper = wrapperRef.current;
+        if (!wrapper || filteredProducts.length === 0) return;
+
+        let animationId: number;
+
+        const scroll = () => {
+            if (!isPaused.current && !isDragging.current) {
+                wrapper.scrollLeft += 1;
+                // Infinite loop check: when scrolled past 1/3 of the total width
+                if (wrapper.scrollLeft >= wrapper.scrollWidth / 3) {
+                    wrapper.scrollLeft = 0;
+                }
+            }
+            animationId = requestAnimationFrame(scroll);
+        };
+
+        animationId = requestAnimationFrame(scroll);
+
+        return () => {
+            cancelAnimationFrame(animationId);
+        };
+    }, [filteredProducts.length]);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        const wrapper = wrapperRef.current;
+        if (!wrapper) return;
+        isDragging.current = true;
+        startX.current = e.pageX - wrapper.offsetLeft;
+        scrollLeft.current = wrapper.scrollLeft;
+    };
+
+    const handleMouseLeave = () => {
+        isDragging.current = false;
+        isPaused.current = false;
+    };
+
+    const handleMouseUp = () => {
+        isDragging.current = false;
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging.current) return;
+        e.preventDefault();
+        const wrapper = wrapperRef.current;
+        if (!wrapper) return;
+        const x = e.pageX - wrapper.offsetLeft;
+        const walk = (x - startX.current) * 2; // scroll-fast
+        wrapper.scrollLeft = scrollLeft.current - walk;
+        
+        // Handle infinite boundaries during drag
+        if (wrapper.scrollLeft >= wrapper.scrollWidth / 3) {
+            wrapper.scrollLeft -= wrapper.scrollWidth / 3;
+            startX.current = e.pageX - wrapper.offsetLeft;
+            scrollLeft.current = wrapper.scrollLeft;
+        } else if (wrapper.scrollLeft <= 0) {
+            wrapper.scrollLeft += wrapper.scrollWidth / 3;
+            startX.current = e.pageX - wrapper.offsetLeft;
+            scrollLeft.current = wrapper.scrollLeft;
+        }
+    };
+
+    const handleScroll = () => {
+        // Handle infinite boundaries for trackpad scroll
+        const wrapper = wrapperRef.current;
+        if (!wrapper || isDragging.current) return;
+        
+        if (wrapper.scrollLeft >= wrapper.scrollWidth / 3) {
+            wrapper.scrollLeft -= wrapper.scrollWidth / 3;
+        } else if (wrapper.scrollLeft <= 0) {
+            wrapper.scrollLeft += wrapper.scrollWidth / 3;
+        }
+    };
+
     const handleProductClick = (product: ProductCardItem) => {
+        // Only click if we weren't just dragging significantly
         navigate(`/products/${toRouteCategory(product.kind)}/${product.slug}`);
     };
 
@@ -78,12 +161,19 @@ export const ProductGallery = () => {
                     </button>
                 </div>
 
-                <div className={styles.carouselWrapper}>
-                    <div
-                        className={styles.carouselTrack}
-                        ref={carouselRef}
-                        style={{ animationDuration: `${Math.max(filteredProducts.length, 1) * 8}s` }}
-                    >
+                <div 
+                    className={styles.carouselWrapper}
+                    ref={wrapperRef}
+                    onMouseEnter={() => isPaused.current = true}
+                    onMouseLeave={handleMouseLeave}
+                    onMouseDown={handleMouseDown}
+                    onMouseUp={handleMouseUp}
+                    onMouseMove={handleMouseMove}
+                    onScroll={handleScroll}
+                    onTouchStart={() => isPaused.current = true}
+                    onTouchEnd={() => isPaused.current = false}
+                >
+                    <div className={styles.carouselTrack} ref={carouselRef}>
                         {duplicatedProducts.map((product, index) => (
                             <div
                                 key={`${product.id}-${index}`}
