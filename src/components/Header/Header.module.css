@@ -4,15 +4,17 @@
     left: 0;
     right: 0;
     z-index: 1000;
-    background-color: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+    background-color: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     transition: all var(--transition-base);
     border-bottom: 1px solid transparent;
 }
 
 .header.scrolled {
     box-shadow: var(--shadow-md);
-    border-bottom-color: var(--color-gray-200);
+    border-bottom: 1px solid var(--glass-border);
+    background-color: rgba(255, 255, 255, 0.85);
 }
 
 .container {

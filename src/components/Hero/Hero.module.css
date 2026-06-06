@@ -52,6 +52,12 @@
     height: 100%;
     object-fit: cover;
     object-position: center;
+    animation: zoomOut 10s ease infinite alternate;
+}
+
+@keyframes zoomOut {
+    0% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
 
 .heroContent {
